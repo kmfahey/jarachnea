@@ -13,7 +13,7 @@ import org.jsoup.select.Elements;
 import jarachnea.Fetcher;
 
 
-public class TestFetcher extends TestCase {
+public final class TestFetcher extends TestCase {
     Path sampleProfilePath = new File("jarachnea/junit/https:__mastodon.social_@Gargron.html").toPath().toAbsolutePath();
 
     public void testFetcherConstructor() throws IOException {

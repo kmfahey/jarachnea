@@ -22,9 +22,9 @@ public final class Handle {
         Matcher handleMatcher;
 
         handleMatcher = handleRegex.matcher(handleString);
-        
-        if (! handleMatcher.matches()) {
-            throw new ProcessingException("unable to detect username and instance from handle string '"+handleString+"'");
+
+        if (!handleMatcher.matches()) {
+            throw new ProcessingException("unable to detect username and instance from handle string '" + handleString + "'");
         }
 
         this.username = handleMatcher.group(1);
@@ -32,42 +32,42 @@ public final class Handle {
     }
 
     public String toHandle() {
-        return "@"+username+"@"+instance;
+        return "@" + username + "@" + instance;
     }
 
     public URL toProfileURL() throws ProcessingException {
         String profileURLString;
 
-        profileURLString = "https://"+instance+"/@"+username;
+        profileURLString = "https://" + instance + "/@" + username;
 
         try {
             return new URL(profileURLString);
         } catch (MalformedURLException exceptionObj) {
-            throw new ProcessingException("unable to form valid profile URL, this was the result: "+profileURLString);
+            throw new ProcessingException("unable to form valid profile URL, this was the result: " + profileURLString);
         }
     }
 
     public URL toFollowersPage1URL() throws ProcessingException {
         String followersURLString;
 
-        followersURLString = "https://"+instance+"/users/"+username+"/followers?page=1";
+        followersURLString = "https://" + instance + "/users/" + username + "/followers?page=1";
 
         try {
             return new URL(followersURLString);
         } catch (MalformedURLException exceptionObj) {
-            throw new ProcessingException("unable to form valid followers URL, this was the result: "+followersURLString);
+            throw new ProcessingException("unable to form valid followers URL, this was the result: " + followersURLString);
         }
     }
 
     public URL toFollowingPage1URL() throws ProcessingException {
         String followingURLString;
 
-        followingURLString = "https://"+instance+"/users/"+username+"/following?page=1";
+        followingURLString = "https://" + instance + "/users/" + username + "/following?page=1";
 
         try {
             return new URL(followingURLString);
         } catch (MalformedURLException exceptionObj) {
-            throw new ProcessingException("unable to form valid following URL, this was the result: "+followingURLString);
+            throw new ProcessingException("unable to form valid following URL, this was the result: " + followingURLString);
         }
     }
 

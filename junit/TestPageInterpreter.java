@@ -14,7 +14,7 @@ import jarachnea.PageInterpreter;
 import jarachnea.ProcessingException;
 
 
-public class TestPageInterpreter extends TestCase {
+public final class TestPageInterpreter extends TestCase {
     Path sampleProfilePath = new File("jarachnea/junit/https:__mastodon.social_@Gargron.html").toPath().toAbsolutePath();
     Path sampleFollowersPath = new File("jarachnea/junit/https:__mastodon.social_users_Gargron_followers_page=1.html").toPath().toAbsolutePath();
     Path sampleFollowingPath = new File("jarachnea/junit/https:__mastodon.social_users_Gargron_following_page=1.html").toPath().toAbsolutePath();

@@ -12,7 +12,7 @@ import jarachnea.Relation;
 import jarachnea.RelationSet;
 
 
-public class TestProfile extends TestCase {
+public final class TestProfile extends TestCase {
     String profileUsername = "Gargron";
     String profileInstance = "mastodon.social";
     Handle profileHandle = new Handle(profileUsername, profileInstance);
@@ -64,7 +64,7 @@ public class TestProfile extends TestCase {
             return;
         }
 
-        if (! (profileObj == null)) {
+        if (!(profileObj == null)) {
             assertEquals(profileObj.profileURL, urlObj);
         }
     }
@@ -82,7 +82,7 @@ public class TestProfile extends TestCase {
             return;
         }
 
-        if (! (profileObj == null)) {
+        if (!(profileObj == null)) {
             assertEquals(profileObj.profileHandle.toHandle(), handleObj.toHandle());
         }
     }

@@ -14,7 +14,7 @@ public final class Profile {
 
     public Profile(final Handle handleObj) throws MalformedURLException {
         profileHandle = handleObj;
-        profileURL = new URL("https://"+handleObj.instance+"/@"+handleObj.username);
+        profileURL = new URL("https://" + handleObj.instance + "/@" + handleObj.username);
         followingMap = new HashMap<>();
         followersMap = new HashMap<>();
     }
@@ -27,8 +27,8 @@ public final class Profile {
 
         profileURL = profileURLObj;
         profileURLString = profileURL.toString();
-        if (! profileURLString.matches("^https://[A-Za-z0-9._]+\\.[a-z]+/@[A-Za-z0-9_.]+$")) {
-            throw new ParseException("URL "+profileURLString+" does not parse as a standard Mastodon web frontend profile URL", 0);
+        if (!profileURLString.matches("^https://[A-Za-z0-9._]+\\.[a-z]+/@[A-Za-z0-9_.]+$")) {
+            throw new ParseException("URL " + profileURLString + " does not parse as a standard Mastodon web frontend profile URL", 0);
         } else {
             profileURLParts = profileURLString.split("[@/]");
             profileInstance = profileURLParts[2];
@@ -46,7 +46,7 @@ public final class Profile {
     }
 
     public URL getFollowingURL(final int pageNo) throws MalformedURLException {
-        return new URL("https://"+profileHandle.instance+"/users/"+profileHandle.username+"/following?page="+pageNo);
+        return new URL("https://" + profileHandle.instance + "/users/" + profileHandle.username + "/following?page=" + pageNo);
     }
 
     public URL getFollowersURL() throws MalformedURLException {
@@ -54,7 +54,7 @@ public final class Profile {
     }
 
     public URL getFollowersURL(final int pageNo) throws MalformedURLException {
-        return new URL("https://"+profileHandle.instance+"/users/"+profileHandle.username+"/followers?page="+pageNo);
+        return new URL("https://" + profileHandle.instance + "/users/" + profileHandle.username + "/followers?page=" + pageNo);
     }
 
     public int addRelationSet(final RelationSet relationSetObj) {

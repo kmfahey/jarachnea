@@ -6,7 +6,7 @@ import jarachnea.Handle;
 import jarachnea.Relation;
 
 
-public class TestRelation extends TestCase {
+public final class TestRelation extends TestCase {
     String profileInstance = "mastodon.social";
     String profileUsername = "Gargron";
     Handle profileHandle = new Handle(profileUsername, profileInstance);

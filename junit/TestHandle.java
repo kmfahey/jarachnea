@@ -8,7 +8,7 @@ import jarachnea.Handle;
 import jarachnea.ProcessingException;
 
 
-public class TestHandle extends TestCase {
+public final class TestHandle extends TestCase {
     String instance = "mastodon.social";
     String username = "Gargron";
     String profileURLString = "https://mastodon.social/@Gargron";
@@ -18,7 +18,7 @@ public class TestHandle extends TestCase {
     Handle handleObj;
 
     public void testHandleConstructorWithHandleString() throws ProcessingException {
-        handleObj = new Handle("@"+username+"@"+instance);
+        handleObj = new Handle("@" + username + "@" + instance);
 
         assertEquals(username, handleObj.username);
         assertEquals(instance, handleObj.instance);
@@ -34,7 +34,7 @@ public class TestHandle extends TestCase {
     public void testHandleToHandle() {
         handleObj = new Handle(username, instance);
 
-        assertEquals(handleObj.toHandle(), "@"+username+"@"+instance);
+        assertEquals(handleObj.toHandle(), "@" + username + "@" + instance);
     }
 
     public void testProfileURL() throws ProcessingException, MalformedURLException {

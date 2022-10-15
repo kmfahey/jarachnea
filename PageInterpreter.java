@@ -67,11 +67,11 @@ public final class PageInterpreter {
                 return PAGE_FORWARDING_UNPARSEABLE;
             }
 
-            if (((Integer)postDateList.size()).equals(0)) {
+            if (((Integer) postDateList.size()).equals(0)) {
                 return PAGE_HAS_NO_POSTS;
             }
 
-            if (! isMostRecentPostWithinCutoff()) {
+            if (!isMostRecentPostWithinCutoff()) {
                 return PAGE_POSTS_OUT_OF_DATE;
             }
 
@@ -116,14 +116,14 @@ public final class PageInterpreter {
         matchingElementsObj = pageDocument.getElementsByAttributeValueMatching("href", hrefRegex);
         matchingElementsObj.removeIf((element) -> (element.attr("rel").equals("")));
         matchingElementsObj.removeIf((element) -> (element.attr("rel").equals("prev")));
-        
-        if (((Integer)matchingElementsObj.size()).equals(0)) {
+
+        if (((Integer) matchingElementsObj.size()).equals(0)) {
             return false;
         }
 
         aHrefElementObj = matchingElementsObj.first();
         hrefAttributeString = aHrefElementObj.toString();
-        fullURLString = "https://"+userHandle.instance+hrefAttributeString;
+        fullURLString = "https://" + userHandle.instance + hrefAttributeString;
 
         nextPageURL = new URL(fullURLString);
 
@@ -137,7 +137,7 @@ public final class PageInterpreter {
         matchingElementsObj = pageDocument.getElementsByClass("time-ago");
         dateFormatObj = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
         postDateList = new ArrayList<Date>();
-        
+
         int arrayIndex = 0;
         try {
             while (arrayIndex < matchingElementsObj.size()) {
@@ -145,10 +145,10 @@ public final class PageInterpreter {
                 arrayIndex += 1;
             }
         } catch (ParseException exceptionObj) {
-            throw new HTMLReadingException("unable to parse <time> tag 'datetime' attribute value '"+matchingElementsObj.get(arrayIndex)+"'");
+            throw new HTMLReadingException("unable to parse <time> tag 'datetime' attribute value '" + matchingElementsObj.get(arrayIndex) + "'");
         }
 
-        postDateList.sort((lhsDate, rhsDate) -> ((Long)rhsDate.getTime()).compareTo(lhsDate.getTime()));
+        postDateList.sort((lhsDate, rhsDate) -> ((Long) rhsDate.getTime()).compareTo(lhsDate.getTime()));
     }
 
     private boolean isForwardingPage() throws HTMLReadingException, ProcessingException {
@@ -159,15 +159,15 @@ public final class PageInterpreter {
 
         matchingElementsObj = pageDocument.getElementsByClass("moved-account-widget__message");
 
-        if (((Integer)matchingElementsObj.size()).equals(0)) {
+        if (((Integer) matchingElementsObj.size()).equals(0)) {
             return false;
         }
 
         forwardingElementObj = matchingElementsObj.first();
-        
+
         handleMatcher = handleRegex.matcher(forwardingElementObj.text());
 
-        if (! handleMatcher.matches()) {
+        if (!handleMatcher.matches()) {
             throw new HTMLReadingException("found <div> with class 'moved-account-widget__message' but could not match handle with a regular expression");
         }
 
@@ -184,11 +184,7 @@ public final class PageInterpreter {
 
         mostRecentDate = postDateList.get(0);
 
-        if (mostRecentDate.getTime() > sevenDaysAgoDate.getTime()) {
-            return true;
-        } else {
-            return false;
-        }
+        return mostRecentDate.getTime() > sevenDaysAgoDate.getTime();
     }
 
     private void detectProfileBio() throws HTMLReadingException {
@@ -198,8 +194,8 @@ public final class PageInterpreter {
 
         matchingElementsFirstTryObj = pageDocument.getElementsByClass("public-account-bio");
         matchingElementsSecondTryObj = pageDocument.getElementsByClass("account__header__content");
-        if (((Integer)matchingElementsFirstTryObj.size()).equals(0)) {
-            if (((Integer)matchingElementsSecondTryObj.size()).equals(0)) {
+        if (((Integer) matchingElementsFirstTryObj.size()).equals(0)) {
+            if (((Integer) matchingElementsSecondTryObj.size()).equals(0)) {
                 throw new HTMLReadingException("unable to detect a profile bio <div> tag with either class 'public-account-bio' or class 'account__header__content'");
             } else {
                 profileBioDivTag = matchingElementsSecondTryObj.first();
@@ -210,4 +206,5 @@ public final class PageInterpreter {
 
         profileBio = profileBioDivTag.text();
     }
+//
 }

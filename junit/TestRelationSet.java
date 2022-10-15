@@ -9,7 +9,7 @@ import jarachnea.Relation;
 import jarachnea.RelationSet;
 
 
-public class TestRelationSet extends TestCase {
+public final class TestRelationSet extends TestCase {
     String profileUsername = "Gargron";
     String profileInstance = "mastodon.social";
     Handle profileHandle = new Handle(profileUsername, profileInstance);

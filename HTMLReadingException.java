@@ -1,6 +1,6 @@
 package jarachnea;
 
-public class HTMLReadingException extends Exception {
+public final class HTMLReadingException extends Exception {
 
     public HTMLReadingException(final String message) {
         super(message);
