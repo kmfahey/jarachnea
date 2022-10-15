@@ -1,12 +1,13 @@
 package jarachnea;
 
-public class ProcessingException extends Exception {
 
-    public ProcessingException(String message) {
+public final class ProcessingException extends Exception {
+
+    public ProcessingException(final String message) {
         super(message);
     }
 
-    public ProcessingException(String message, Throwable cause) {
+    public ProcessingException(final String message, final Throwable cause) {
         super(message, cause);
     }
 }

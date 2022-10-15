@@ -1,9 +1,12 @@
 package jarachnea.junit;
 
-import java.net.*;
-import junit.framework.*;
+import java.net.URL;
+import java.net.MalformedURLException;
+import junit.framework.TestCase;
 
-import jarachnea.*;
+import jarachnea.Handle;
+import jarachnea.ProcessingException;
+
 
 public class TestHandle extends TestCase {
     String instance = "mastodon.social";

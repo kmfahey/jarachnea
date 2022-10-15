@@ -1,20 +1,26 @@
 package jarachnea;
 
-import java.net.*;
-import java.io.*;
-import java.text.*;
+import java.net.URL;
+import java.net.URLConnection;
+import java.net.MalformedURLException;
+import java.io.InputStream;
+import java.io.IOException;
 
-import org.jsoup.*;
-import org.jsoup.nodes.*;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 
-public class Fetcher {
-    public int connectionTimeout;
+public final class Fetcher {
+    private int connectionTimeout;
 
-    public Fetcher(int timeoutArg) {
+    public int getConnectionTimeout() {
+        return connectionTimeout;
+    }
+
+    public Fetcher(final int timeoutArg) {
         connectionTimeout = timeoutArg;
     }
 
-    public Document fetchContentDocument(URL contentURL) throws MalformedURLException, IOException {
+    public Document fetchContentDocument(final URL contentURL) throws MalformedURLException, IOException {
         URLConnection connectObj;
         InputStream contentStream;
         String contentType;

@@ -1,11 +1,16 @@
 package jarachnea.junit;
 
-import java.net.*;
-import java.text.*;
+import java.net.URL;
+import java.net.MalformedURLException;
+import java.text.ParseException;
 
-import junit.framework.*;
+import junit.framework.TestCase;
 
-import jarachnea.*;
+import jarachnea.Handle;
+import jarachnea.Profile;
+import jarachnea.Relation;
+import jarachnea.RelationSet;
+
 
 public class TestProfile extends TestCase {
     String profileUsername = "Gargron";

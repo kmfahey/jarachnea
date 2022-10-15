@@ -1,16 +1,20 @@
 package jarachnea;
 
-import java.net.*;
-import java.text.*;
-import java.util.*;
-import java.util.regex.*;
+import java.net.URL;
+import java.net.MalformedURLException;
+import java.text.SimpleDateFormat;
+import java.text.ParseException;
+import java.util.Date;
+import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import org.jsoup.nodes.*;
-import org.jsoup.select.*;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
-import jarachnea.*;
 
-public class PageInterpreter {
+public final class PageInterpreter {
     public static final int PROFILE_PAGE = 0;
     public static final int FOLLOWERS_PAGE = 1;
     public static final int FOLLOWING_PAGE = 2;
@@ -39,7 +43,7 @@ public class PageInterpreter {
     public URL nextPageURL;
     public String profileBio;
 
-    public PageInterpreter(Document pageDocumentObj, Handle userHandleObj, int pageTypeFlag, int recentPostDaysCutoffVal) throws ProcessingException {
+    public PageInterpreter(final Document pageDocumentObj, final Handle userHandleObj, final int pageTypeFlag, final int recentPostDaysCutoffVal) throws ProcessingException {
         pageDocument = pageDocumentObj;
         userHandle = userHandleObj;
         pageType = pageTypeFlag;

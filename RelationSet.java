@@ -1,30 +1,32 @@
 package jarachnea;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Iterator;
 
-import jarachnea.*;
+import jarachnea.Relation;
 
-public class RelationSet {
+
+public final class RelationSet {
     public Handle profileHandle;
     public int relationType;
     public int relationPageNumber;
     public HashSet<Relation> relationSet;
 
-    public RelationSet(Handle profileHandleObj, int relationTypeFlag, int relationPageNumberInt) {
+    public RelationSet(final Handle profileHandleObj, final int relationTypeFlag, final int relationPageNumberInt) {
         profileHandle = profileHandleObj;
         relationType = relationTypeFlag;
         relationPageNumber = relationPageNumberInt;
         relationSet = new HashSet<Relation>();
     }
 
-    public RelationSet(String profileUsername, String profileInstance, int relationTypeFlag, int relationPageNumberInt) {
+    public RelationSet(final String profileUsername, final String profileInstance, final int relationTypeFlag, final int relationPageNumberInt) {
         profileHandle = new Handle(profileUsername, profileInstance);
         relationType = relationTypeFlag;
         relationPageNumber = relationPageNumberInt;
         relationSet = new HashSet<Relation>();
     }
 
-    public void addToSet(Relation relationObj) {
+    public void addToSet(final Relation relationObj) {
         relationSet.add(relationObj);
     }
 
@@ -32,7 +34,7 @@ public class RelationSet {
         relationSet.clear();
     }
 
-    public boolean setContains(Relation relationObj) {
+    public boolean setContains(final Relation relationObj) {
         return relationSet.contains(relationObj);
     }
 
@@ -44,7 +46,7 @@ public class RelationSet {
         return relationSet.iterator();
     }
 
-    public boolean removeFromSet(Relation relationObj) {
+    public boolean removeFromSet(final Relation relationObj) {
         return relationSet.remove(relationObj);
     }
 

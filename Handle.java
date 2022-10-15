@@ -1,23 +1,24 @@
 package jarachnea;
 
-import java.net.*;
-import java.util.regex.*;
+import java.net.URL;
+import java.net.MalformedURLException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import jarachnea.*;
 
-public class Handle {
+public final class Handle {
 
     public String username;
     public String instance;
 
     Pattern handleRegex = Pattern.compile("^@([A-Za-z0-9_.-]+)@([A-Za-z0-9_.-]+\\.[a-z]+)$");
 
-    public Handle(String username, String instance) {
+    public Handle(final String username, final String instance) {
         this.username = username;
         this.instance = instance;
     }
 
-    public Handle(String handleString) throws ProcessingException {
+    public Handle(final String handleString) throws ProcessingException {
         Matcher handleMatcher;
 
         handleMatcher = handleRegex.matcher(handleString);
@@ -70,7 +71,7 @@ public class Handle {
         }
     }
 
-    public boolean equals(Handle otherHandleObj) {
+    public boolean equals(final Handle otherHandleObj) {
         return username.equals(otherHandleObj.username) && instance.equals(otherHandleObj.instance);
     }
 }

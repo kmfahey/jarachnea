@@ -1,8 +1,10 @@
 package jarachnea.junit;
 
-import junit.framework.*;
+import junit.framework.TestCase;
 
-import jarachnea.*;
+import jarachnea.Handle;
+import jarachnea.Relation;
+
 
 public class TestRelation extends TestCase {
     String profileInstance = "mastodon.social";

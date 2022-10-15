@@ -1,16 +1,18 @@
 package jarachnea.junit;
 
-import java.io.*;
-import java.net.*;
-import java.nio.file.*;
-import java.text.*;
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.nio.file.Path;
 
-import junit.framework.*;
+import junit.framework.TestCase;
+import org.jsoup.nodes.Document;
 
-import jarachnea.*;
+import jarachnea.Fetcher;
+import jarachnea.Handle;
+import jarachnea.PageInterpreter;
+import jarachnea.ProcessingException;
 
-import org.jsoup.nodes.*;
-import org.jsoup.select.*;
 
 public class TestPageInterpreter extends TestCase {
     Path sampleProfilePath = new File("jarachnea/junit/https:__mastodon.social_@Gargron.html").toPath().toAbsolutePath();

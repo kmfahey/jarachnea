@@ -1,10 +1,13 @@
 package jarachnea.junit;
 
-import java.util.*;
+import java.util.Iterator;
 
-import junit.framework.*;
+import junit.framework.TestCase;
 
-import jarachnea.*;
+import jarachnea.Handle;
+import jarachnea.Relation;
+import jarachnea.RelationSet;
+
 
 public class TestRelationSet extends TestCase {
     String profileUsername = "Gargron";

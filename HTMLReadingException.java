@@ -2,11 +2,11 @@ package jarachnea;
 
 public class HTMLReadingException extends Exception {
 
-    public HTMLReadingException(String message) {
+    public HTMLReadingException(final String message) {
         super(message);
     }
 
-    public HTMLReadingException(String message, Throwable cause) {
+    public HTMLReadingException(final String message, Throwable cause) {
         super(message, cause);
     }
 }

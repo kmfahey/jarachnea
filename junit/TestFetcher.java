@@ -1,15 +1,17 @@
 package jarachnea.junit;
 
-import java.io.*;
-import java.nio.file.*;
-import java.net.*;
-import java.text.*;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.net.URL;
 
-import junit.framework.*;
-import org.jsoup.nodes.*;
-import org.jsoup.select.*;
+import junit.framework.TestCase;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
-import jarachnea.*;
+import jarachnea.Fetcher;
+
 
 public class TestFetcher extends TestCase {
     Path sampleProfilePath = new File("jarachnea/junit/https:__mastodon.social_@Gargron.html").toPath().toAbsolutePath();
@@ -19,7 +21,7 @@ public class TestFetcher extends TestCase {
 
         fetcherObj = new Fetcher(10_000);
 
-        assertEquals(fetcherObj.connectionTimeout, 10_000);
+        assertEquals(fetcherObj.getConnectionTimeout(), 10_000);
     }
 
     public void testFetcherParseURLToDocument() {
