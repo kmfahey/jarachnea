@@ -30,20 +30,51 @@ public final class PageInterpreter {
     public static final int FOUND_NEXT_PAGE_URL = 8;
     public static final int FOUND_NO_NEXT_PAGE_URL = 9;
 
-    Pattern handleRegex = Pattern.compile("^.* (@[A-Za-z0-9._]+@[A-Za-z0-9._]+\\.[a-z]+):$");
-    Pattern hrefRegex = Pattern.compile("^/users/[A-Za-z0-9_.-]+/follow...\\?page=[0-9]+$");
+    private final long numberOfMillisecondsInAWeek = 1000L * 60L * 60L * 24L * 7L;
+
+    private final Pattern handleRegex = Pattern.compile("^.* (@[A-Za-z0-9._]+@[A-Za-z0-9._]+\\.[a-z]+):$");
+    private final Pattern hrefRegex = Pattern.compile("^/users/[A-Za-z0-9_.-]+/follow...\\?page=[0-9]+$");
 
     private ArrayList<Date> postDateList;
 
-    public Document pageDocument;
-    public int pageType;
-    public int recentPostDaysCutoff;
-    public Handle userHandle;
-    public Handle forwardingAddressHandle;
-    public URL nextPageURL;
-    public String profileBio;
+    private Document pageDocument;
+    private int pageType;
+    private int recentPostDaysCutoff;
+    private Handle userHandle;
+    private Handle forwardingAddressHandle;
+    private URL nextPageURL;
+    private String profileBio;
 
-    public PageInterpreter(final Document pageDocumentObj, final Handle userHandleObj, final int pageTypeFlag, final int recentPostDaysCutoffVal) throws ProcessingException {
+    public Document getPageDocument() {
+        return pageDocument;
+    }
+
+    public int getPageType() {
+        return pageType;
+    }
+
+    public int getRecentPostDaysCutoff() {
+        return recentPostDaysCutoff;
+    }
+
+    public Handle getUserHandle() {
+        return userHandle;
+    }
+
+    public Handle getForwardingAddressHandle() {
+        return forwardingAddressHandle;
+    }
+
+    public URL getNextPageURL() {
+        return nextPageURL;
+    }
+
+    public String getProfileBio() {
+        return profileBio;
+    }
+
+    public PageInterpreter(final Document pageDocumentObj, final Handle userHandleObj, final int pageTypeFlag, final int recentPostDaysCutoffVal) 
+        throws ProcessingException {
         pageDocument = pageDocumentObj;
         userHandle = userHandleObj;
         pageType = pageTypeFlag;
@@ -111,7 +142,6 @@ public final class PageInterpreter {
         Element aHrefElementObj;
         String hrefAttributeString;
         String fullURLString;
-        URL nextPageURL;
 
         matchingElementsObj = pageDocument.getElementsByAttributeValueMatching("href", hrefRegex);
         matchingElementsObj.removeIf((element) -> (element.attr("rel").equals("")));
@@ -123,7 +153,7 @@ public final class PageInterpreter {
 
         aHrefElementObj = matchingElementsObj.first();
         hrefAttributeString = aHrefElementObj.toString();
-        fullURLString = "https://" + userHandle.instance + hrefAttributeString;
+        fullURLString = "https://" + userHandle.getInstance() + hrefAttributeString;
 
         nextPageURL = new URL(fullURLString);
 
@@ -180,7 +210,7 @@ public final class PageInterpreter {
         Date mostRecentDate;
         Date sevenDaysAgoDate;
 
-        sevenDaysAgoDate = new Date((new Date().getTime()) - (1000L * 60L * 60L * 24L * 7L));
+        sevenDaysAgoDate = new Date((new Date().getTime()) - numberOfMillisecondsInAWeek);
 
         mostRecentDate = postDateList.get(0);
 

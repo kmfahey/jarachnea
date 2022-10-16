@@ -8,20 +8,21 @@ import java.net.URL;
 import junit.framework.TestCase;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
 import jarachnea.Fetcher;
 
 
 public final class TestFetcher extends TestCase {
-    Path sampleProfilePath = new File("jarachnea/junit/https:__mastodon.social_@Gargron.html").toPath().toAbsolutePath();
+    private Path sampleProfilePath = new File("jarachnea/junit/https:__mastodon.social_@Gargron.html").toPath().toAbsolutePath();
+
+    private int tenSecondsInMilliseconds = 10_000;
 
     public void testFetcherConstructor() throws IOException {
         Fetcher fetcherObj;
 
-        fetcherObj = new Fetcher(10_000);
+        fetcherObj = new Fetcher(tenSecondsInMilliseconds);
 
-        assertEquals(fetcherObj.getConnectionTimeout(), 10_000);
+        assertEquals(fetcherObj.getConnectionTimeout(), tenSecondsInMilliseconds);
     }
 
     public void testFetcherParseURLToDocument() {
@@ -32,7 +33,7 @@ public final class TestFetcher extends TestCase {
 
         try {
             sampleProfileURL = sampleProfilePath.toUri().toURL();
-            fetcherObj = new Fetcher(10_000);
+            fetcherObj = new Fetcher(tenSecondsInMilliseconds);
             sampleProfileDocument = fetcherObj.fetchContentDocument(sampleProfileURL);
         } catch (IOException exceptionObj) {
             fail(exceptionObj.getMessage());

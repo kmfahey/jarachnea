@@ -9,26 +9,34 @@ import jarachnea.ProcessingException;
 
 
 public final class TestHandle extends TestCase {
-    String instance = "mastodon.social";
-    String username = "Gargron";
-    String profileURLString = "https://mastodon.social/@Gargron";
-    String followersURLString = "https://mastodon.social/users/Gargron/followers?page=1";
-    String followingURLString = "https://mastodon.social/users/Gargron/following?page=1";
+    private String instance = "mastodon.social";
+    private String username = "Gargron";
+    private String profileURLString = "https://mastodon.social/@Gargron";
+    private String followersURLString = "https://mastodon.social/users/Gargron/followers?page=1";
+    private String followingURLString = "https://mastodon.social/users/Gargron/following?page=1";
 
-    Handle handleObj;
+    private Handle handleObj;
 
     public void testHandleConstructorWithHandleString() throws ProcessingException {
         handleObj = new Handle("@" + username + "@" + instance);
 
-        assertEquals(username, handleObj.username);
-        assertEquals(instance, handleObj.instance);
+        assertEquals(username, handleObj.getUsername());
+        assertEquals(instance, handleObj.getInstance());
+    }
+
+    public void testHandleConstructorWithHandleIdPlusUsernamePlusInstance() {
+        handleObj = new Handle(1, username, instance);
+
+        assertEquals(handleObj.getHandleId(), 1);
+        assertEquals(handleObj.getUsername(), username);
+        assertEquals(handleObj.getInstance(), instance);
     }
 
     public void testHandleConstructorWithUsernamePlusInstance() {
         handleObj = new Handle(username, instance);
 
-        assertEquals(username, handleObj.username);
-        assertEquals(instance, handleObj.instance);
+        assertEquals(handleObj.getUsername(), username);
+        assertEquals(handleObj.getInstance(), instance);
     }
 
     public void testHandleToHandle() {

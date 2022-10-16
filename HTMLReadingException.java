@@ -6,7 +6,7 @@ public final class HTMLReadingException extends Exception {
         super(message);
     }
 
-    public HTMLReadingException(final String message, Throwable cause) {
+    public HTMLReadingException(final String message, final Throwable cause) {
         super(message, cause);
     }
 }

@@ -3,54 +3,67 @@ package jarachnea;
 import java.util.HashSet;
 import java.util.Iterator;
 
-import jarachnea.Relation;
 
+public final class RelationSet extends HashSet<Relation> {
+    private Handle profileHandle;
+    private int relationType;
+    private int relationPageNumber;
 
-public final class RelationSet {
-    public Handle profileHandle;
-    public int relationType;
-    public int relationPageNumber;
-    public HashSet<Relation> relationSet;
+    public Handle getProfileHandle() {
+        return profileHandle;
+    }
+
+    public int getRelationType() {
+        return relationType;
+    }
+
+    public int getRelationPageNumber() {
+        return relationPageNumber;
+    }
+
 
     public RelationSet(final Handle profileHandleObj, final int relationTypeFlag, final int relationPageNumberInt) {
+        super();
         profileHandle = profileHandleObj;
         relationType = relationTypeFlag;
         relationPageNumber = relationPageNumberInt;
-        relationSet = new HashSet<Relation>();
     }
 
     public RelationSet(final String profileUsername, final String profileInstance, final int relationTypeFlag, final int relationPageNumberInt) {
+        super();
         profileHandle = new Handle(profileUsername, profileInstance);
         relationType = relationTypeFlag;
         relationPageNumber = relationPageNumberInt;
-        relationSet = new HashSet<Relation>();
     }
 
-    public void addToSet(final Relation relationObj) {
-        relationSet.add(relationObj);
+    public RelationSet(final RelationSet baseRelationSet, final Handle profileHandleObj, final int relationTypeFlag,
+                       final int relationPageNumberInt) {
+        super(baseRelationSet);
+        profileHandle = profileHandleObj;
+        relationType = relationTypeFlag;
+        relationPageNumber = relationPageNumberInt;
     }
 
-    public void clearSet() {
-        relationSet.clear();
+    public RelationSet(final RelationSet baseRelationSet, final String profileUsername, final String profileInstance, final int relationTypeFlag,
+                       final int relationPageNumberInt) {
+        super(baseRelationSet);
+        profileHandle = new Handle(profileUsername, profileInstance);
+        relationType = relationTypeFlag;
+        relationPageNumber = relationPageNumberInt;
     }
 
-    public boolean setContains(final Relation relationObj) {
-        return relationSet.contains(relationObj);
-    }
+    public RelationSet clone() {
+        RelationSet newRelationSetObj;
+        Iterator setIterator;
 
-    public boolean setIsEmpty() {
-        return relationSet.isEmpty();
-    }
+        newRelationSetObj = new RelationSet(profileHandle, relationType, relationPageNumber);
+        
+        setIterator = iterator();
 
-    public Iterator<Relation> setIterator() {
-        return relationSet.iterator();
-    }
-
-    public boolean removeFromSet(final Relation relationObj) {
-        return relationSet.remove(relationObj);
-    }
-
-    public int sizeOfSet() {
-        return relationSet.size();
+        while (setIterator.hasNext()) {
+            newRelationSetObj.add((Relation) setIterator.next());
+        }
+        
+        return newRelationSetObj;
     }
 }

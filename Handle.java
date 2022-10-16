@@ -8,14 +8,33 @@ import java.util.regex.Pattern;
 
 public final class Handle {
 
-    public String username;
-    public String instance;
+    private final Pattern handleRegex = Pattern.compile("^@([A-Za-z0-9_.-]+)@([A-Za-z0-9_.-]+\\.[a-z]+)$");
 
-    Pattern handleRegex = Pattern.compile("^@([A-Za-z0-9_.-]+)@([A-Za-z0-9_.-]+\\.[a-z]+)$");
+    private int handleId;
+    private String username;
+    private String instance;
 
-    public Handle(final String username, final String instance) {
-        this.username = username;
-        this.instance = instance;
+    public int getHandleId() {
+        return handleId;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getInstance() {
+        return instance;
+    }
+
+    public Handle(final int handleIdInt, final String usernameString, final String instanceString) {
+        handleId = handleIdInt;
+        username = usernameString;
+        instance = instanceString;
+    }
+
+    public Handle(final String usernameString, final String instanceString) {
+        username = usernameString;
+        instance = instanceString;
     }
 
     public Handle(final String handleString) throws ProcessingException {

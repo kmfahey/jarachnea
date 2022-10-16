@@ -5,10 +5,26 @@ public final class Relation {
     public static final Integer IS_FOLLOWED_BY = 0;
     public static final Integer IS_FOLLOWER_OF = 1;
 
-    public Handle profileHandle;
-    public Handle relationHandle;
-    public int relationType;
-    public int relationPageNumber;
+    private Handle profileHandle;
+    private Handle relationHandle;
+    private int relationType;
+    private int relationPageNumber;
+
+    public Handle getProfileHandle() {
+        return profileHandle;
+    }
+
+    public Handle getRelationHandle() {
+        return relationHandle;
+    }
+
+    public int getRelationType() {
+        return relationType;
+    }
+
+    public int getRelationPageNumber() {
+        return relationPageNumber;
+    }
 
     public Relation(final Handle profileHandleObj, final Handle relationHandleObj, final int relationTypeFlag, final int relationPageNumberInt) {
         profileHandle = profileHandleObj;

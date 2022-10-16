@@ -7,14 +7,31 @@ import java.util.HashMap;
 
 
 public final class Profile {
-    public Handle profileHandle;
-    public URL profileURL;
-    public HashMap<Integer,RelationSet> followingMap;
-    public HashMap<Integer,RelationSet> followersMap;
+    private Handle profileHandle;
+    private URL profileURL;
+    private HashMap<Integer, RelationSet> followingMap;
+    private HashMap<Integer, RelationSet> followersMap;
+
+    public Handle getProfileHandle() {
+        return profileHandle;
+    }
+
+    public URL getProfileURL() {
+        return profileURL;
+    }
+
+    public HashMap<Integer, RelationSet> getFollowingMap() {
+        return followingMap;
+    }
+
+    public HashMap<Integer, RelationSet> getFollowersMap() {
+        return followersMap;
+    }
+
 
     public Profile(final Handle handleObj) throws MalformedURLException {
         profileHandle = handleObj;
-        profileURL = new URL("https://" + handleObj.instance + "/@" + handleObj.username);
+        profileURL = new URL("https://" + handleObj.getInstance() + "/@" + handleObj.getUsername());
         followingMap = new HashMap<>();
         followersMap = new HashMap<>();
     }
@@ -37,16 +54,12 @@ public final class Profile {
         }
     }
 
-    public URL getProfileURL() {
-        return profileURL;
-    }
-
     public URL getFollowingURL() throws MalformedURLException {
         return getFollowingURL(1);
     }
 
     public URL getFollowingURL(final int pageNo) throws MalformedURLException {
-        return new URL("https://" + profileHandle.instance + "/users/" + profileHandle.username + "/following?page=" + pageNo);
+        return new URL("https://" + profileHandle.getInstance() + "/users/" + profileHandle.getUsername() + "/following?page=" + pageNo);
     }
 
     public URL getFollowersURL() throws MalformedURLException {
@@ -54,16 +67,16 @@ public final class Profile {
     }
 
     public URL getFollowersURL(final int pageNo) throws MalformedURLException {
-        return new URL("https://" + profileHandle.instance + "/users/" + profileHandle.username + "/followers?page=" + pageNo);
+        return new URL("https://" + profileHandle.getInstance() + "/users/" + profileHandle.getUsername() + "/followers?page=" + pageNo);
     }
 
     public int addRelationSet(final RelationSet relationSetObj) {
-        if (relationSetObj.relationType == Relation.IS_FOLLOWER_OF) {
-            followersMap.put(relationSetObj.relationPageNumber, relationSetObj);
+        if (relationSetObj.getRelationType() == Relation.IS_FOLLOWER_OF) {
+            followersMap.put(relationSetObj.getRelationPageNumber(), relationSetObj);
         } else {
-            followingMap.put(relationSetObj.relationPageNumber, relationSetObj);
+            followingMap.put(relationSetObj.getRelationPageNumber(), relationSetObj);
         }
 
-        return relationSetObj.sizeOfSet();
+        return relationSetObj.size();
     }
 }

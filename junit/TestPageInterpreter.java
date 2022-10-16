@@ -15,23 +15,72 @@ import jarachnea.ProcessingException;
 
 
 public final class TestPageInterpreter extends TestCase {
-    Path sampleProfilePath = new File("jarachnea/junit/https:__mastodon.social_@Gargron.html").toPath().toAbsolutePath();
-    Path sampleFollowersPath = new File("jarachnea/junit/https:__mastodon.social_users_Gargron_followers_page=1.html").toPath().toAbsolutePath();
-    Path sampleFollowingPath = new File("jarachnea/junit/https:__mastodon.social_users_Gargron_following_page=1.html").toPath().toAbsolutePath();
-    Handle userHandle = new Handle("Gargron", "mastodon.social");
+    private Path sampleProfilePath = new File(
+        "jarachnea/junit/https:__mastodon.social_@Gargron.html"
+    ).toPath().toAbsolutePath();
 
-    Path pageTimesUnparseablePath = new File("jarachnea/junit/https:__mastodon.social_@Gargron_unparseable_times.html").toPath().toAbsolutePath();
-    Path pageHasNoPostsPath = new File("jarachnea/junit/https:__mastodon.social_@szyczyx.html").toPath().toAbsolutePath();
-    Path pagePostsOutOfDatePath = new File("jarachnea/junit/https:__kolektiva.social_@Anarchotranny.html").toPath().toAbsolutePath();
-    Path pageForwardingUnparseablePath = new File("jarachnea/junit/https:__mastodon.social_@clintlalonde_unparseable_forwarding.html").toPath().toAbsolutePath();
-    Path pageIsForwardingPagePath = new File("jarachnea/junit/https:__mastodon.social_@clintlalonde.html").toPath().toAbsolutePath();
-    Path pageBioUnparseablePath = new File("jarachnea/junit/https:__mastodon.social_@Gargron_unparseable_bio.html").toPath().toAbsolutePath();
-    Path pageNextUrlsUnparseablePath = new File("jarachnea/junit/https:__mastodon.social_users_Gargron_followers_page=1.html").toPath().toAbsolutePath();
-    Path foundPageBioPath = new File("jarachnea/junit/https:__mastodon.social_@Gargron.html").toPath().toAbsolutePath();
-    Path foundNextFollowingPageUrlPath = new File("jarachnea/junit/https:__mastodon.social_users_Gargron_following_page=1.html").toPath().toAbsolutePath();
-    Path foundNextFollowersPageUrlPath = new File("jarachnea/junit/https:__mastodon.social_users_Gargron_followers_page=1.html").toPath().toAbsolutePath();
-    Path foundNoNextFollowingPageUrlPath = new File("jarachnea/junit/https:__mastodon.social_users_Gargron_following_page=26.html").toPath().toAbsolutePath();
-    Path foundNoNextFollowersPageUrlPath = new File("jarachnea/junit/https:__mastodon.social_users_Gargron_followers_page=9979.html").toPath().toAbsolutePath();
+    private Path sampleFollowersPath = new File(
+        "jarachnea/junit/https:__mastodon.social_users_Gargron_followers_page=1.html"
+    ).toPath().toAbsolutePath();
+
+    private Path sampleFollowingPath = new File(
+        "jarachnea/junit/https:__mastodon.social_users_Gargron_following_page=1.html"
+    ).toPath().toAbsolutePath();
+
+    private Handle userHandle = new Handle("Gargron", "mastodon.social");
+
+    private Path pageTimesUnparseablePath = new File(
+        "jarachnea/junit/https:__mastodon.social_@Gargron_unparseable_times.html"
+    ).toPath().toAbsolutePath();
+
+    private Path pageHasNoPostsPath = new File(
+        "jarachnea/junit/https:__mastodon.social_@szyczyx.html"
+    ).toPath().toAbsolutePath();
+
+    private Path pagePostsOutOfDatePath = new File(
+        "jarachnea/junit/https:__kolektiva.social_@Anarchotranny.html"
+    ).toPath().toAbsolutePath();
+
+    private Path pageForwardingUnparseablePath = new File(
+        "jarachnea/junit/https:__mastodon.social_@clintlalonde_unparseable_forwarding.html"
+    ).toPath().toAbsolutePath();
+
+    private Path pageIsForwardingPagePath = new File(
+        "jarachnea/junit/https:__mastodon.social_@clintlalonde.html"
+    ).toPath().toAbsolutePath();
+
+    private Path pageBioUnparseablePath = new File(
+        "jarachnea/junit/https:__mastodon.social_@Gargron_unparseable_bio.html"
+    ).toPath().toAbsolutePath();
+
+    private Path pageNextUrlsUnparseablePath = new File(
+        "jarachnea/junit/https:__mastodon.social_users_Gargron_followers_page=1.html"
+    ).toPath().toAbsolutePath();
+
+    private Path foundPageBioPath = new File(
+        "jarachnea/junit/https:__mastodon.social_@Gargron.html"
+    ).toPath().toAbsolutePath();
+    
+    private Path foundNextFollowingPageUrlPath = new File(
+        "jarachnea/junit/https:__mastodon.social_users_Gargron_following_page=1.html"
+    ).toPath().toAbsolutePath();
+
+    private Path foundNextFollowersPageUrlPath = new File(
+        "jarachnea/junit/https:__mastodon.social_users_Gargron_followers_page=1.html"
+    ).toPath().toAbsolutePath();
+
+    private Path foundNoNextFollowingPageUrlPath = new File(
+        "jarachnea/junit/https:__mastodon.social_users_Gargron_following_page=26.html"
+    ).toPath().toAbsolutePath();
+
+    private Path foundNoNextFollowersPageUrlPath = new File(
+        "jarachnea/junit/https:__mastodon.social_users_Gargron_followers_page=9979.html"
+    ).toPath().toAbsolutePath();
+
+    private int tenSecondsInMilliseconds = 10_000;
+    private int interpreterCutoffSevenDays = 7;
+    private int interpreterCutoffThreeDays = 3;
+    private int interpreterCutoffOneDay = 1;
 
     public void testPageInterpreterConstructor() throws ProcessingException {
         Fetcher fetcherObj;
@@ -45,7 +94,7 @@ public final class TestPageInterpreter extends TestCase {
         URL sampleFollowersURL;
         URL sampleFollowingURL;
 
-        fetcherObj = new Fetcher(10_000);
+        fetcherObj = new Fetcher(tenSecondsInMilliseconds);
 
         try {
             sampleProfileURL = sampleProfilePath.toUri().toURL();
@@ -60,29 +109,32 @@ public final class TestPageInterpreter extends TestCase {
             return;
         }
 
-        profilePageInterpreterObj = new PageInterpreter(sampleProfileDocument, userHandle, PageInterpreter.PROFILE_PAGE, 7);
+        profilePageInterpreterObj = new PageInterpreter(
+            sampleProfileDocument, userHandle, PageInterpreter.PROFILE_PAGE, interpreterCutoffSevenDays);
 
-        assertTrue(profilePageInterpreterObj.pageDocument == sampleProfileDocument);
-        assertTrue(profilePageInterpreterObj.userHandle == userHandle);
-        assertEquals(profilePageInterpreterObj.pageType, PageInterpreter.PROFILE_PAGE);
-        assertEquals(profilePageInterpreterObj.recentPostDaysCutoff, 7);
-        assertTrue(profilePageInterpreterObj.forwardingAddressHandle == null);
+        assertTrue(profilePageInterpreterObj.getPageDocument() == sampleProfileDocument);
+        assertTrue(profilePageInterpreterObj.getUserHandle() == userHandle);
+        assertEquals(profilePageInterpreterObj.getPageType(), PageInterpreter.PROFILE_PAGE);
+        assertEquals(profilePageInterpreterObj.getRecentPostDaysCutoff(), interpreterCutoffSevenDays);
+        assertTrue(profilePageInterpreterObj.getForwardingAddressHandle() == null);
 
-        followersPageInterpreterObj = new PageInterpreter(sampleFollowersDocument, userHandle, PageInterpreter.FOLLOWERS_PAGE, 3);
+        followersPageInterpreterObj = new PageInterpreter(
+            sampleFollowersDocument, userHandle, PageInterpreter.FOLLOWERS_PAGE, interpreterCutoffThreeDays);
 
-        assertTrue(followersPageInterpreterObj.pageDocument == sampleFollowersDocument);
-        assertTrue(followersPageInterpreterObj.userHandle == userHandle);
-        assertEquals(followersPageInterpreterObj.pageType, PageInterpreter.FOLLOWERS_PAGE);
-        assertEquals(followersPageInterpreterObj.recentPostDaysCutoff, 3);
-        assertTrue(profilePageInterpreterObj.forwardingAddressHandle == null);
+        assertTrue(followersPageInterpreterObj.getPageDocument() == sampleFollowersDocument);
+        assertTrue(followersPageInterpreterObj.getUserHandle() == userHandle);
+        assertEquals(followersPageInterpreterObj.getPageType(), PageInterpreter.FOLLOWERS_PAGE);
+        assertEquals(followersPageInterpreterObj.getRecentPostDaysCutoff(), interpreterCutoffThreeDays);
+        assertTrue(profilePageInterpreterObj.getForwardingAddressHandle() == null);
 
-        followingPageInterpreterObj = new PageInterpreter(sampleFollowingDocument, userHandle, PageInterpreter.FOLLOWING_PAGE, 1);
+        followingPageInterpreterObj = new PageInterpreter(
+            sampleFollowingDocument, userHandle, PageInterpreter.FOLLOWING_PAGE, interpreterCutoffOneDay);
 
-        assertTrue(followingPageInterpreterObj.pageDocument == sampleFollowingDocument);
-        assertTrue(followingPageInterpreterObj.userHandle == userHandle);
-        assertEquals(followingPageInterpreterObj.pageType, PageInterpreter.FOLLOWING_PAGE);
-        assertEquals(followingPageInterpreterObj.recentPostDaysCutoff, 1);
-        assertTrue(profilePageInterpreterObj.forwardingAddressHandle == null);
+        assertTrue(followingPageInterpreterObj.getPageDocument() == sampleFollowingDocument);
+        assertTrue(followingPageInterpreterObj.getUserHandle() == userHandle);
+        assertEquals(followingPageInterpreterObj.getPageType(), PageInterpreter.FOLLOWING_PAGE);
+        assertEquals(followingPageInterpreterObj.getRecentPostDaysCutoff(), interpreterCutoffOneDay);
+        assertTrue(profilePageInterpreterObj.getForwardingAddressHandle() == null);
     }
 
     public void testPageTimesUnparseable() throws ProcessingException {
@@ -93,7 +145,7 @@ public final class TestPageInterpreter extends TestCase {
         PageInterpreter pageTimesUnparseableInterpreter;
         int pageInterpretationResult;
 
-        fetcherObj = new Fetcher(10_000);
+        fetcherObj = new Fetcher(tenSecondsInMilliseconds);
 
         try {
             pageTimesUnparseableURL = pageTimesUnparseablePath.toUri().toURL();
@@ -103,7 +155,8 @@ public final class TestPageInterpreter extends TestCase {
             return;
         }
 
-        pageTimesUnparseableInterpreter = new PageInterpreter(pageTimesUnparseableDocument, new Handle("Gargron", "mastodon.social"), PageInterpreter.PROFILE_PAGE, 7);
+        pageTimesUnparseableInterpreter = new PageInterpreter(
+            pageTimesUnparseableDocument, new Handle("Gargron", "mastodon.social"), PageInterpreter.PROFILE_PAGE, interpreterCutoffSevenDays);
         pageInterpretationResult = pageTimesUnparseableInterpreter.interpretPage();
 
         assertEquals(pageInterpretationResult, PageInterpreter.PAGE_TIMES_UNPARSEABLE);
@@ -117,7 +170,7 @@ public final class TestPageInterpreter extends TestCase {
         PageInterpreter pageHasNoPostsInterpreter;
         int pageInterpretationResult;
 
-        fetcherObj = new Fetcher(10_000);
+        fetcherObj = new Fetcher(tenSecondsInMilliseconds);
 
         try {
             pageHasNoPostsURL = pageHasNoPostsPath.toUri().toURL();
@@ -127,7 +180,8 @@ public final class TestPageInterpreter extends TestCase {
             return;
         }
 
-        pageHasNoPostsInterpreter = new PageInterpreter(pageHasNoPostsDocument, new Handle("szyczy", "mastodon.social"), PageInterpreter.PROFILE_PAGE, 7);
+        pageHasNoPostsInterpreter = new PageInterpreter(
+            pageHasNoPostsDocument, new Handle("szyczy", "mastodon.social"), PageInterpreter.PROFILE_PAGE, interpreterCutoffSevenDays);
         pageInterpretationResult = pageHasNoPostsInterpreter.interpretPage();
 
         assertEquals(pageInterpretationResult, PageInterpreter.PAGE_HAS_NO_POSTS);
@@ -141,7 +195,7 @@ public final class TestPageInterpreter extends TestCase {
         PageInterpreter pagePostsOutOfDateInterpreter;
         int pageInterpretationResult;
 
-        fetcherObj = new Fetcher(10_000);
+        fetcherObj = new Fetcher(tenSecondsInMilliseconds);
 
         try {
             pagePostsOutOfDateURL = pagePostsOutOfDatePath.toUri().toURL();
@@ -151,7 +205,8 @@ public final class TestPageInterpreter extends TestCase {
             return;
         }
 
-        pagePostsOutOfDateInterpreter = new PageInterpreter(pagePostsOutOfDateDocument, new Handle("Anarchotranny", "kolektiva.social"), PageInterpreter.PROFILE_PAGE, 7);
+        pagePostsOutOfDateInterpreter = new PageInterpreter(
+            pagePostsOutOfDateDocument, new Handle("Anarchotranny", "kolektiva.social"), PageInterpreter.PROFILE_PAGE, interpreterCutoffSevenDays);
         pageInterpretationResult = pagePostsOutOfDateInterpreter.interpretPage();
 
         assertEquals(pageInterpretationResult, PageInterpreter.PAGE_POSTS_OUT_OF_DATE);
@@ -165,7 +220,7 @@ public final class TestPageInterpreter extends TestCase {
         PageInterpreter pageForwardingUnparseableInterpreter;
         int pageInterpretationResult;
 
-        fetcherObj = new Fetcher(10_000);
+        fetcherObj = new Fetcher(tenSecondsInMilliseconds);
 
         try {
             pageForwardingUnparseableURL = pageForwardingUnparseablePath.toUri().toURL();
@@ -175,7 +230,9 @@ public final class TestPageInterpreter extends TestCase {
             return;
         }
 
-        pageForwardingUnparseableInterpreter = new PageInterpreter(pageForwardingUnparseableDocument, new Handle("clintlalonde", "mastodon.social"), PageInterpreter.PROFILE_PAGE, 7);
+        pageForwardingUnparseableInterpreter = new PageInterpreter(
+            pageForwardingUnparseableDocument, new Handle("clintlalonde", "mastodon.social"),
+            PageInterpreter.PROFILE_PAGE, interpreterCutoffSevenDays);
         pageInterpretationResult = pageForwardingUnparseableInterpreter.interpretPage();
 
         assertEquals(pageInterpretationResult, PageInterpreter.PAGE_FORWARDING_UNPARSEABLE);
@@ -189,7 +246,7 @@ public final class TestPageInterpreter extends TestCase {
         PageInterpreter pageIsForwardingPageInterpreter;
         int pageInterpretationResult;
 
-        fetcherObj = new Fetcher(10_000);
+        fetcherObj = new Fetcher(tenSecondsInMilliseconds);
 
         try {
             pageIsForwardingPageURL = pageIsForwardingPagePath.toUri().toURL();
@@ -199,7 +256,8 @@ public final class TestPageInterpreter extends TestCase {
             return;
         }
 
-        pageIsForwardingPageInterpreter = new PageInterpreter(pageIsForwardingPageDocument, new Handle("clintlalonde", "mastodon.social"), PageInterpreter.PROFILE_PAGE, 7);
+        pageIsForwardingPageInterpreter = new PageInterpreter(
+            pageIsForwardingPageDocument, new Handle("clintlalonde", "mastodon.social"), PageInterpreter.PROFILE_PAGE, interpreterCutoffSevenDays);
         pageInterpretationResult = pageIsForwardingPageInterpreter.interpretPage();
 
         assertEquals(pageInterpretationResult, PageInterpreter.PAGE_IS_FORWARDING_PAGE);
@@ -213,7 +271,7 @@ public final class TestPageInterpreter extends TestCase {
         PageInterpreter pageBioUnparseableInterpreter;
         int pageInterpretationResult;
 
-        fetcherObj = new Fetcher(10_000);
+        fetcherObj = new Fetcher(tenSecondsInMilliseconds);
 
         try {
             pageBioUnparseableURL = pageBioUnparseablePath.toUri().toURL();
@@ -223,7 +281,8 @@ public final class TestPageInterpreter extends TestCase {
             return;
         }
 
-        pageBioUnparseableInterpreter = new PageInterpreter(pageBioUnparseableDocument, new Handle("Gargron", "mastodon.social"), PageInterpreter.PROFILE_PAGE, 7);
+        pageBioUnparseableInterpreter = new PageInterpreter(
+            pageBioUnparseableDocument, new Handle("Gargron", "mastodon.social"), PageInterpreter.PROFILE_PAGE, interpreterCutoffSevenDays);
         pageInterpretationResult = pageBioUnparseableInterpreter.interpretPage();
 
         assertEquals(pageInterpretationResult, PageInterpreter.PAGE_BIO_UNPARSEABLE);
@@ -237,7 +296,7 @@ public final class TestPageInterpreter extends TestCase {
         PageInterpreter pageNextUrlsUnparseableInterpreter;
         int pageInterpretationResult;
 
-        fetcherObj = new Fetcher(10_000);
+        fetcherObj = new Fetcher(tenSecondsInMilliseconds);
 
         try {
             pageNextUrlsUnparseableURL = pageNextUrlsUnparseablePath.toUri().toURL();
@@ -247,7 +306,8 @@ public final class TestPageInterpreter extends TestCase {
             return;
         }
 
-        pageNextUrlsUnparseableInterpreter = new PageInterpreter(pageNextUrlsUnparseableDocument, new Handle("Gargron", "mastodon social"), PageInterpreter.FOLLOWERS_PAGE, 7);
+        pageNextUrlsUnparseableInterpreter = new PageInterpreter(
+            pageNextUrlsUnparseableDocument, new Handle("Gargron", "mastodon social"), PageInterpreter.FOLLOWERS_PAGE, interpreterCutoffSevenDays);
         pageInterpretationResult = pageNextUrlsUnparseableInterpreter.interpretPage();
 
         assertEquals(pageInterpretationResult, PageInterpreter.PAGE_NEXT_URLS_UNPARSEABLE);
@@ -261,7 +321,7 @@ public final class TestPageInterpreter extends TestCase {
         PageInterpreter foundPageBioInterpreter;
         int pageInterpretationResult;
 
-        fetcherObj = new Fetcher(10_000);
+        fetcherObj = new Fetcher(tenSecondsInMilliseconds);
 
         try {
             foundPageBioURL = foundPageBioPath.toUri().toURL();
@@ -271,7 +331,8 @@ public final class TestPageInterpreter extends TestCase {
             return;
         }
 
-        foundPageBioInterpreter = new PageInterpreter(foundPageBioDocument, new Handle("Gargron", "mastodon.social"), PageInterpreter.PROFILE_PAGE, 7);
+        foundPageBioInterpreter = new PageInterpreter(
+            foundPageBioDocument, new Handle("Gargron", "mastodon.social"), PageInterpreter.PROFILE_PAGE, interpreterCutoffSevenDays);
         pageInterpretationResult = foundPageBioInterpreter.interpretPage();
 
         assertEquals(pageInterpretationResult, PageInterpreter.FOUND_PAGE_BIO);
@@ -285,7 +346,7 @@ public final class TestPageInterpreter extends TestCase {
         PageInterpreter foundNextFollowingPageUrlInterpreter;
         int pageInterpretationResult;
 
-        fetcherObj = new Fetcher(10_000);
+        fetcherObj = new Fetcher(tenSecondsInMilliseconds);
 
         try {
             foundNextFollowingPageUrlURL = foundNextFollowingPageUrlPath.toUri().toURL();
@@ -295,7 +356,8 @@ public final class TestPageInterpreter extends TestCase {
             return;
         }
 
-        foundNextFollowingPageUrlInterpreter = new PageInterpreter(foundNextFollowingPageUrlDocument, new Handle("Gargron", "mastodon.social"), PageInterpreter.FOLLOWING_PAGE, 7);
+        foundNextFollowingPageUrlInterpreter = new PageInterpreter(
+            foundNextFollowingPageUrlDocument, new Handle("Gargron", "mastodon.social"), PageInterpreter.FOLLOWING_PAGE, interpreterCutoffSevenDays);
         pageInterpretationResult = foundNextFollowingPageUrlInterpreter.interpretPage();
 
         assertEquals(pageInterpretationResult, PageInterpreter.FOUND_NEXT_PAGE_URL);
@@ -309,7 +371,7 @@ public final class TestPageInterpreter extends TestCase {
         PageInterpreter foundNextFollowersPageUrlInterpreter;
         int pageInterpretationResult;
 
-        fetcherObj = new Fetcher(10_000);
+        fetcherObj = new Fetcher(tenSecondsInMilliseconds);
 
         try {
             foundNextFollowersPageUrlURL = foundNextFollowersPageUrlPath.toUri().toURL();
@@ -319,7 +381,8 @@ public final class TestPageInterpreter extends TestCase {
             return;
         }
 
-        foundNextFollowersPageUrlInterpreter = new PageInterpreter(foundNextFollowersPageUrlDocument, new Handle("Gargron", "mastodon.social"), PageInterpreter.FOLLOWERS_PAGE, 7);
+        foundNextFollowersPageUrlInterpreter = new PageInterpreter(
+            foundNextFollowersPageUrlDocument, new Handle("Gargron", "mastodon.social"), PageInterpreter.FOLLOWERS_PAGE, interpreterCutoffSevenDays);
         pageInterpretationResult = foundNextFollowersPageUrlInterpreter.interpretPage();
 
         assertEquals(pageInterpretationResult, PageInterpreter.FOUND_NEXT_PAGE_URL);
@@ -333,7 +396,7 @@ public final class TestPageInterpreter extends TestCase {
         PageInterpreter foundNoNextFollowingPageUrlInterpreter;
         int pageInterpretationResult;
 
-        fetcherObj = new Fetcher(10_000);
+        fetcherObj = new Fetcher(tenSecondsInMilliseconds);
 
         try {
             foundNoNextFollowingPageUrlURL = foundNoNextFollowingPageUrlPath.toUri().toURL();
@@ -343,7 +406,9 @@ public final class TestPageInterpreter extends TestCase {
             return;
         }
 
-        foundNoNextFollowingPageUrlInterpreter = new PageInterpreter(foundNoNextFollowingPageUrlDocument, new Handle("Gargron", "mastodon.social"), PageInterpreter.FOLLOWING_PAGE, 7);
+        foundNoNextFollowingPageUrlInterpreter = new PageInterpreter(
+            foundNoNextFollowingPageUrlDocument, new Handle("Gargron", "mastodon.social"),
+            PageInterpreter.FOLLOWING_PAGE, interpreterCutoffSevenDays);
         pageInterpretationResult = foundNoNextFollowingPageUrlInterpreter.interpretPage();
 
         assertEquals(pageInterpretationResult, PageInterpreter.FOUND_NO_NEXT_PAGE_URL);
@@ -357,7 +422,7 @@ public final class TestPageInterpreter extends TestCase {
         PageInterpreter foundNoNextFollowersPageUrlInterpreter;
         int pageInterpretationResult;
 
-        fetcherObj = new Fetcher(10_000);
+        fetcherObj = new Fetcher(tenSecondsInMilliseconds);
 
         try {
             foundNoNextFollowersPageUrlURL = foundNoNextFollowersPageUrlPath.toUri().toURL();
@@ -367,7 +432,9 @@ public final class TestPageInterpreter extends TestCase {
             return;
         }
 
-        foundNoNextFollowersPageUrlInterpreter = new PageInterpreter(foundNoNextFollowersPageUrlDocument, new Handle("Gargron", "mastodon.social"), PageInterpreter.FOLLOWERS_PAGE, 7);
+        foundNoNextFollowersPageUrlInterpreter = new PageInterpreter(
+            foundNoNextFollowersPageUrlDocument, new Handle("Gargron", "mastodon.social"),
+            PageInterpreter.FOLLOWERS_PAGE, interpreterCutoffSevenDays);
         pageInterpretationResult = foundNoNextFollowersPageUrlInterpreter.interpretPage();
 
         assertEquals(pageInterpretationResult, PageInterpreter.FOUND_NO_NEXT_PAGE_URL);
