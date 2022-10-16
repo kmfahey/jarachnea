@@ -33,11 +33,13 @@ public final class Handle {
     }
 
     public Handle(final String usernameString, final String instanceString) {
+        handleId = -1;
         username = usernameString;
         instance = instanceString;
     }
 
     public Handle(final String handleString) throws ProcessingException {
+        handleId = -1;
         Matcher handleMatcher;
 
         handleMatcher = handleRegex.matcher(handleString);

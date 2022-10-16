@@ -10,8 +10,8 @@ public final class Instance {
     public static final int MALFUNCTIONING = 2;
     public static final int UNPARSEABLE = 3;
 
-    private final int DEFAULT_RATE_LIMIT_DOWNTIME = 300;
-    private final long MILLISECONDS_IN_A_SECOND = 1_000L;
+    private static final int DEFAULT_RATE_LIMIT_DOWNTIME = 300;
+    private static final long MILLISECONDS_IN_A_SECOND = 1_000L;
 
     private Date rateLimitExpiresDate = null;
 
@@ -31,7 +31,7 @@ public final class Instance {
         instanceStatus = instanceStatusFlag;
     }
 
-    public void setRateLimit(int limitDowntimeLength) {
+    public void setRateLimit(final int limitDowntimeLength) {
         Date nowDate;
         Date rateLimitExpiryDate;
 
@@ -49,7 +49,7 @@ public final class Instance {
         if (rateLimitExpiresDate == null) {
             return true;
         }
-        
+
         remainingSeconds = rateLimitRemainingSeconds();
         return remainingSeconds <= 0;
     }
@@ -62,7 +62,7 @@ public final class Instance {
         if (rateLimitExpiresDate == null) {
             return 0.0F;
         }
-        remainingSeconds = rateLimitExpiresDate.getTime() - nowDate.getTime();// / MILLISECONDS_IN_A_SECOND;
+        remainingSeconds = rateLimitExpiresDate.getTime() - nowDate.getTime();
 
         return remainingSeconds;
     }

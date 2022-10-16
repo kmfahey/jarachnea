@@ -15,14 +15,14 @@ import jarachnea.Fetcher;
 public final class TestFetcher extends TestCase {
     private Path sampleProfilePath = new File("jarachnea/junit/https:__mastodon.social_@Gargron.html").toPath().toAbsolutePath();
 
-    private int tenSecondsInMilliseconds = 10_000;
+    private static final int TEN_SECONDS_IN_MILLISECONDS = 10_000;
 
     public void testFetcherConstructor() throws IOException {
         Fetcher fetcherObj;
 
-        fetcherObj = new Fetcher(tenSecondsInMilliseconds);
+        fetcherObj = new Fetcher(TEN_SECONDS_IN_MILLISECONDS);
 
-        assertEquals(fetcherObj.getConnectionTimeout(), tenSecondsInMilliseconds);
+        assertEquals(fetcherObj.getConnectionTimeout(), TEN_SECONDS_IN_MILLISECONDS);
     }
 
     public void testFetcherParseURLToDocument() {
@@ -33,7 +33,7 @@ public final class TestFetcher extends TestCase {
 
         try {
             sampleProfileURL = sampleProfilePath.toUri().toURL();
-            fetcherObj = new Fetcher(tenSecondsInMilliseconds);
+            fetcherObj = new Fetcher(TEN_SECONDS_IN_MILLISECONDS);
             sampleProfileDocument = fetcherObj.fetchContentDocument(sampleProfileURL);
         } catch (IOException exceptionObj) {
             fail(exceptionObj.getMessage());

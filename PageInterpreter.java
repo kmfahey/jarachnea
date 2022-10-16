@@ -73,8 +73,8 @@ public final class PageInterpreter {
         return profileBio;
     }
 
-    public PageInterpreter(final Document pageDocumentObj, final Handle userHandleObj, final int pageTypeFlag, final int recentPostDaysCutoffVal) 
-        throws ProcessingException {
+    public PageInterpreter(final Document pageDocumentObj, final Handle userHandleObj, final int pageTypeFlag, final int recentPostDaysCutoffVal)
+                           throws ProcessingException {
         pageDocument = pageDocumentObj;
         userHandle = userHandleObj;
         pageType = pageTypeFlag;

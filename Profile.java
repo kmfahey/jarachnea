@@ -9,6 +9,9 @@ import java.util.HashMap;
 public final class Profile {
     private Handle profileHandle;
     private URL profileURL;
+    private int profileHandleId;
+    private boolean profileConsidered;
+    private String profileSnippet;
     private HashMap<Integer, RelationSet> followingMap;
     private HashMap<Integer, RelationSet> followersMap;
 
@@ -20,6 +23,14 @@ public final class Profile {
         return profileURL;
     }
 
+    public int getProfileHandleId() {
+        return profileHandleId;
+    }
+
+    public boolean getProfileConsidered() {
+        return profileConsidered
+    }
+
     public HashMap<Integer, RelationSet> getFollowingMap() {
         return followingMap;
     }
@@ -28,6 +39,17 @@ public final class Profile {
         return followersMap;
     }
 
+
+    public Profile(final String profileUsernameString, final String profileInstanceString, final int profileHandleIdInt,
+                   final boolean profileConsideredBoolean, final String profileSnippetString) throws MalformedURLException {
+        profileHandle = new Handle(profileUsernameString, profileInstanceString);
+        profileHandleId = profileHandleIdInt;
+        profileConsidered = profileConsideredBoolean;
+        profileSnippet = profileSnippetString;
+        profileURL = new URL("https://" + handleObj.getInstance() + "/@" + handleObj.getUsername());
+        followingMap = new HashMap<Integer, RelationSet>();
+        followersMap = new HashMap<Integer, RelationSet>();
+    }
 
     public Profile(final Handle handleObj) throws MalformedURLException {
         profileHandle = handleObj;

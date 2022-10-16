@@ -57,13 +57,13 @@ public final class RelationSet extends HashSet<Relation> {
         Iterator setIterator;
 
         newRelationSetObj = new RelationSet(profileHandle, relationType, relationPageNumber);
-        
+
         setIterator = iterator();
 
         while (setIterator.hasNext()) {
             newRelationSetObj.add((Relation) setIterator.next());
         }
-        
+
         return newRelationSetObj;
     }
 }

@@ -1,19 +1,16 @@
 package jarachnea.junit;
 
-import java.lang.Thread;
-import java.util.Date;
-
 import junit.framework.TestCase;
 
 import jarachnea.Instance;
 
 
 public final class TestInstance extends TestCase {
-    private final String INSTANCE_HOSTNAME = "mastodon.social";
-    private final int INSTANCE_STATUS = Instance.IN_GOOD_STANDING;
+    private static final String INSTANCE_HOSTNAME = "mastodon.social";
+    private static final int INSTANCE_STATUS = Instance.IN_GOOD_STANDING;
 
-    private long SLEEP_DURATION_IN_MILLISECONDS = 3_000L;
-    private int RATE_LIMIT_IN_SECONDS = 5;
+    private static final long SLEEP_DURATION_IN_MILLISECONDS = 3_000L;
+    private static final int RATE_LIMIT_IN_SECONDS = 5;
 
     public void testInstanceConstructor() {
         Instance instanceObj;

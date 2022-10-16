@@ -20,6 +20,7 @@ public final class TestHandle extends TestCase {
     public void testHandleConstructorWithHandleString() throws ProcessingException {
         handleObj = new Handle("@" + username + "@" + instance);
 
+        assertEquals(handleObj.getHandleId(), -1);
         assertEquals(username, handleObj.getUsername());
         assertEquals(instance, handleObj.getInstance());
     }
@@ -35,6 +36,7 @@ public final class TestHandle extends TestCase {
     public void testHandleConstructorWithUsernamePlusInstance() {
         handleObj = new Handle(username, instance);
 
+        assertEquals(handleObj.getHandleId(), -1);
         assertEquals(handleObj.getUsername(), username);
         assertEquals(handleObj.getInstance(), instance);
     }
