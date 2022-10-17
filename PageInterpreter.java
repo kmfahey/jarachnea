@@ -1,11 +1,12 @@
 package jarachnea;
 
-import java.net.URL;
 import java.net.MalformedURLException;
-import java.text.SimpleDateFormat;
+import java.net.URL;
 import java.text.ParseException;
-import java.util.Date;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.Iterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -34,7 +35,10 @@ public final class PageInterpreter {
 
     private final Pattern handleRegex = Pattern.compile("^.* (@[A-Za-z0-9._]+@[A-Za-z0-9._]+\\.[a-z]+):$");
     private final Pattern hrefRegex = Pattern.compile("^/users/[A-Za-z0-9_.-]+/follow...\\?page=[0-9]+$");
-
+    private final Pattern relationRegex = Pattern.compile("^https://([A-Za-z0-9_.-]+\\.[a-z]+)/@([A-Za-z0-9_.-]+)$");
+    private final Pattern followersUrlRegex = Pattern.compile("^.*followers.*$");
+    private final Pattern followingUrlRegex = Pattern.compile("^.*following.*$");
+    private final Pattern pageNumberUrlQsaRegex = Pattern.compile("^.*(?:\\?|%3F)page=([0-9]+)\\b.*?$");
     private ArrayList<Date> postDateList;
 
     private Document pageDocument;
@@ -44,6 +48,7 @@ public final class PageInterpreter {
     private Handle forwardingAddressHandle;
     private URL nextPageURL;
     private String profileBio;
+    private RelationSet relationSetObj;
 
     public Document getPageDocument() {
         return pageDocument;
@@ -73,6 +78,10 @@ public final class PageInterpreter {
         return profileBio;
     }
 
+    public RelationSet getRelationSet() {
+        return relationSetObj;
+    }
+
     public PageInterpreter(final Document pageDocumentObj, final Handle userHandleObj, final int pageTypeFlag, final int recentPostDaysCutoffVal)
                            throws ProcessingException {
         pageDocument = pageDocumentObj;
@@ -82,7 +91,7 @@ public final class PageInterpreter {
         forwardingAddressHandle = null;
     }
 
-    public int interpretPage() throws ProcessingException {
+    public int interpretPage() throws ProcessingException, MalformedURLException {
         if (pageType == PROFILE_PAGE) {
             try {
                 loadPostDateList();
@@ -113,6 +122,8 @@ public final class PageInterpreter {
             }
             return FOUND_PAGE_BIO;
         } else {
+            generateRelationSet();
+
             try {
                 if (detectNextPageURL()) {
                     return FOUND_NEXT_PAGE_URL;
@@ -123,6 +134,77 @@ public final class PageInterpreter {
                 return PAGE_NEXT_URLS_UNPARSEABLE;
             }
         }
+    }
+
+    private boolean generateRelationSet() throws ProcessingException, MalformedURLException {
+        Elements matchingATags;
+        String documentLocation;
+        Iterator aTagsIter;
+        Matcher urlPageNumberMatcher;
+        int relationTypeFlag;
+        int relationPageNumber;
+
+        documentLocation = pageDocument.location();
+        if (followersUrlRegex.matcher(documentLocation).matches()) {
+            relationTypeFlag = Relation.IS_FOLLOWER_OF;
+        } else if (followingUrlRegex.matcher(documentLocation).matches()) {
+            relationTypeFlag = Relation.IS_FOLLOWED_BY;
+        } else {
+            throw new ProcessingException("unable to discern whether Document is a following page or a follower page given URL " + documentLocation);
+        }
+
+        urlPageNumberMatcher = pageNumberUrlQsaRegex.matcher(documentLocation);
+
+        if (urlPageNumberMatcher.matches()) {
+            relationPageNumber = Integer.valueOf(urlPageNumberMatcher.group(1));
+        } else {
+            throw new ProcessingException("unable to detect page number in URL " + documentLocation + " using regular expression " + pageNumberUrlQsaRegex.pattern());
+        }
+
+        matchingATags = pageDocument.getElementsByAttributeValueMatching("href", relationRegex);
+
+        if (matchingATags.size() == 0) {
+            return false;
+        }
+
+        relationSetObj = new RelationSet(userHandle, relationTypeFlag, relationPageNumber);
+        aTagsIter = matchingATags.iterator();
+
+        while (aTagsIter.hasNext()) {
+            Element aTag;
+            Relation relationObj;
+            Matcher hrefMatcher;
+            Handle relationHandleObj;
+            String hrefUrlString;
+            String relationUsername;
+            String relationInstance;
+            String profileURLString;
+
+            aTag = (Element) aTagsIter.next();
+            hrefUrlString = aTag.attr("href");
+            hrefMatcher = relationRegex.matcher(hrefUrlString);
+
+            if (! hrefMatcher.matches()) {
+                throw new ProcessingException("unable to match URL " + hrefUrlString + " against regular expression " + relationRegex.pattern());
+            }
+
+            try {
+                profileURLString = userHandle.toProfileURL().toString();
+            } catch (ProcessingException exceptionObj) {
+                continue;
+            }
+            if (hrefMatcher.group().equals(userHandle.toProfileURL().toString())) {
+                continue;
+            }
+
+            relationInstance = hrefMatcher.group(1);
+            relationUsername = hrefMatcher.group(2);
+            relationHandleObj = new Handle(relationUsername, relationInstance);
+            relationObj = new Relation(userHandle, relationHandleObj, relationTypeFlag, relationPageNumber);
+            relationSetObj.add(relationObj);
+        }
+        
+        return true;
     }
 
     private String pageTypeString() {
