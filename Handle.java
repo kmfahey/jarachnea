@@ -18,6 +18,10 @@ public final class Handle {
         return handleId;
     }
 
+    public void setHandleId(final int handleIdInt) {
+        handleId = handleIdInt;
+    }
+
     public String getUsername() {
         return username;
     }

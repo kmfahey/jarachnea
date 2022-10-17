@@ -23,8 +23,8 @@ public final class Fetcher {
     public Document fetchContentDocument(final URL contentURL) throws MalformedURLException, IOException {
         URLConnection connectObj;
         InputStream contentStream;
-        String contentType;
         String[] contentTypeParts;
+        String contentType;
         String contentCharset;
         Document contentDocument;
 

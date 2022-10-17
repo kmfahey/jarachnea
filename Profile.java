@@ -9,7 +9,6 @@ import java.util.HashMap;
 public final class Profile {
     private Handle profileHandle;
     private URL profileURL;
-    private int profileHandleId;
     private boolean profileConsidered;
     private String profileSnippet;
     private HashMap<Integer, RelationSet> followingMap;
@@ -23,12 +22,12 @@ public final class Profile {
         return profileURL;
     }
 
-    public int getProfileHandleId() {
-        return profileHandleId;
+    public boolean getProfileConsidered() {
+        return profileConsidered;
     }
 
-    public boolean getProfileConsidered() {
-        return profileConsidered
+    public String getProfileSnippet() {
+        return profileSnippet;
     }
 
     public HashMap<Integer, RelationSet> getFollowingMap() {
@@ -39,28 +38,60 @@ public final class Profile {
         return followersMap;
     }
 
+    public Profile(final Handle profileHandleObj, final boolean profileConsideredBoolean, final String profileSnippetString,
+                   final Relation[] followingRelations, final Relation[] followersRelations) throws MalformedURLException {
+        this(profileHandleObj, profileConsideredBoolean, profileSnippetString);
+        loadRelationsArrays(followingRelations, followersRelations);
+    }
 
-    public Profile(final String profileUsernameString, final String profileInstanceString, final int profileHandleIdInt,
-                   final boolean profileConsideredBoolean, final String profileSnippetString) throws MalformedURLException {
-        profileHandle = new Handle(profileUsernameString, profileInstanceString);
-        profileHandleId = profileHandleIdInt;
+    public Profile(final Handle profileHandleObj, final boolean profileConsideredBoolean, final String profileSnippetString) throws MalformedURLException {
+        profileHandle = profileHandleObj;
         profileConsidered = profileConsideredBoolean;
         profileSnippet = profileSnippetString;
-        profileURL = new URL("https://" + handleObj.getInstance() + "/@" + handleObj.getUsername());
+        profileURL = new URL("https://" + profileHandle.getUsername() + "/@" + profileHandle.getInstance());
         followingMap = new HashMap<Integer, RelationSet>();
         followersMap = new HashMap<Integer, RelationSet>();
+    }
+
+    public Profile(final String profileUsernameString, final String profileInstanceString, final boolean profileConsideredBoolean,
+                   final String profileSnippetString, final Relation[] followingRelations, final Relation[] followersRelations
+                   ) throws MalformedURLException {
+        this(profileUsernameString, profileInstanceString, profileConsideredBoolean, profileSnippetString);
+        loadRelationsArrays(followingRelations, followersRelations);
+    }
+
+    public Profile(final String profileUsernameString, final String profileInstanceString,
+                   final boolean profileConsideredBoolean, final String profileSnippetString) throws MalformedURLException {
+        profileHandle = new Handle(profileUsernameString, profileInstanceString);
+        profileConsidered = profileConsideredBoolean;
+        profileSnippet = profileSnippetString;
+        profileURL = new URL("https://" + profileInstanceString + "/@" + profileUsernameString);
+        followingMap = new HashMap<Integer, RelationSet>();
+        followersMap = new HashMap<Integer, RelationSet>();
+    }
+
+    public Profile(final Handle handleObj, final Relation[] followingRelations, final Relation[] followersRelations) throws MalformedURLException {
+        this(handleObj);
+        loadRelationsArrays(followingRelations, followersRelations);
     }
 
     public Profile(final Handle handleObj) throws MalformedURLException {
         profileHandle = handleObj;
         profileURL = new URL("https://" + handleObj.getInstance() + "/@" + handleObj.getUsername());
+        profileConsidered = false;
+        profileSnippet = "";
         followingMap = new HashMap<>();
         followersMap = new HashMap<>();
     }
 
+    public Profile(final URL profileURLObj, final Relation[] followingRelations, final Relation[] followersRelations) throws ParseException {
+        this(profileURLObj);
+        loadRelationsArrays(followingRelations, followersRelations);
+    }
+
     public Profile(final URL profileURLObj) throws ParseException {
-        String profileURLString;
         String[] profileURLParts;
+        String profileURLString;
         String profileInstance;
         String profileUsername;
 
@@ -73,6 +104,36 @@ public final class Profile {
             profileInstance = profileURLParts[2];
             profileUsername = profileURLParts[4];
             profileHandle = new Handle(profileUsername, profileInstance);
+        }
+        profileConsidered = false;
+        profileSnippet = "";
+        followingMap = new HashMap<Integer, RelationSet>();
+        followersMap = new HashMap<Integer, RelationSet>();
+    }
+
+    private void loadRelationsArrays(final Relation[] followingRelations, final Relation[] followersRelations) {
+        Relation[][] relationsArrays = {followingRelations, followersRelations};
+
+        for (int outerIndex = 0; outerIndex < relationsArrays.length; outerIndex++) {
+            HashMap<Integer, RelationSet> relationsMap = (outerIndex == 0) ? followingMap : followersMap;
+
+            for (int innerIndex = 0; innerIndex < relationsArrays[outerIndex].length; innerIndex++) {
+                RelationSet relationSetObj;
+                Relation relationObj;
+                int relationPageNumber;
+
+                relationObj = relationsArrays[outerIndex][innerIndex];
+                relationPageNumber = relationObj.getRelationPageNumber();
+
+                if (relationsMap.containsKey(relationPageNumber)) {
+                    relationSetObj = relationsMap.get(relationPageNumber);
+                } else {
+                    relationSetObj = new RelationSet(profileHandle, relationObj.getRelationType(), relationPageNumber);
+                    relationsMap.put(relationPageNumber, relationSetObj);
+                }
+
+                relationSetObj.add(relationsArrays[outerIndex][innerIndex]);
+            }
         }
     }
 

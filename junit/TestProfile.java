@@ -3,6 +3,8 @@ package jarachnea.junit;
 import java.net.URL;
 import java.net.MalformedURLException;
 import java.text.ParseException;
+import java.util.HashMap;
+import java.util.ArrayList;
 
 import junit.framework.TestCase;
 
@@ -75,42 +77,232 @@ public final class TestProfile extends TestCase {
     private String username = "Gargron";
     private String profileUrlString = "https://mastodon.social/@Gargron";
 
-    public void testProfileConstructorWithHandle() {
+    public void testProfileConstructorWithHandleAndMaps() throws MalformedURLException {
+        ArrayList<HashMap<Integer, RelationSet>> relationsMapList;
+        Relation[][] relationsArrays = {followingArray, followersArray};
         Handle handleObj;
         Profile profileObj;
         URL urlObj;
 
         handleObj = new Handle(username, instance);
 
-        try {
-            urlObj = new URL(profileUrlString);
-            profileObj = new Profile(handleObj);
-        } catch (MalformedURLException exceptionObj) {
-            fail(exceptionObj.getMessage());
-            return;
-        }
+        urlObj = new URL(profileUrlString);
+        profileObj = new Profile(handleObj, followingArray, followersArray);
 
-        if (!(profileObj == null)) {
-            assertEquals(profileObj.getProfileURL(), urlObj);
+        relationsMapList = new ArrayList<HashMap<Integer, RelationSet>>();
+        relationsMapList.add(profileObj.getFollowingMap());
+        relationsMapList.add(profileObj.getFollowersMap());
+
+        assertEquals(profileObj.getProfileURL(), urlObj);
+        assertEquals(profileObj.getProfileConsidered(), false);
+        assertEquals(profileObj.getProfileSnippet(), "");
+        assertEquals(profileObj.getFollowersMap().size(), 1);
+        assertEquals(profileObj.getFollowingMap().size(), 1);
+
+        for (int outerIndex = 0; outerIndex < relationsArrays.length; outerIndex++) {
+            HashMap<Integer, RelationSet> relationsMap;
+
+            relationsMap = relationsMapList.get(outerIndex);
+
+            for (int innerIndex = 0; innerIndex < relationsArrays[outerIndex].length; innerIndex++) {
+                Relation relationObj;
+
+                relationObj = relationsArrays[outerIndex][innerIndex];
+
+                assertTrue(relationsMap.get(relationObj.getRelationPageNumber()).contains(relationObj));
+            }
         }
     }
 
-    public void testProfileConstructorWithURL() {
+    public void testProfileConstructorWithHandle() throws MalformedURLException {
+        Handle handleObj;
+        Profile profileObj;
+        URL urlObj;
+
+        handleObj = new Handle(username, instance);
+
+        urlObj = new URL(profileUrlString);
+        profileObj = new Profile(handleObj);
+
+        assertEquals(profileObj.getProfileURL(), urlObj);
+        assertEquals(profileObj.getProfileConsidered(), false);
+        assertEquals(profileObj.getProfileSnippet(), "");
+        assertEquals(profileObj.getFollowersMap().size(), 0);
+        assertEquals(profileObj.getFollowingMap().size(), 0);
+    }
+
+    public void testProfileConstructorWithURLAndMaps() throws MalformedURLException, ParseException {
+        ArrayList<HashMap<Integer, RelationSet>> relationsMapList;
+        Relation[][] relationsArrays = {followingArray, followersArray};
         URL urlObj;
         Profile profileObj;
         Handle handleObj = new Handle(username, instance);
 
-        try {
-            urlObj = new URL(profileUrlString);
-            profileObj = new Profile(urlObj);
-        } catch (MalformedURLException | ParseException exceptionObj) {
-            fail(exceptionObj.getMessage());
-            return;
-        }
+        urlObj = new URL(profileUrlString);
+        profileObj = new Profile(urlObj, followingArray, followersArray);
 
-        if (!(profileObj == null)) {
-            assertEquals(profileObj.getProfileHandle().toHandle(), handleObj.toHandle());
+        relationsMapList = new ArrayList<HashMap<Integer, RelationSet>>();
+        relationsMapList.add(profileObj.getFollowingMap());
+        relationsMapList.add(profileObj.getFollowersMap());
+
+        assertEquals(profileObj.getProfileHandle().toHandle(), handleObj.toHandle());
+        assertEquals(profileObj.getProfileConsidered(), false);
+        assertEquals(profileObj.getProfileSnippet(), "");
+        assertEquals(profileObj.getFollowersMap().size(), 1);
+        assertEquals(profileObj.getFollowingMap().size(), 1);
+
+        for (int outerIndex = 0; outerIndex < relationsArrays.length; outerIndex++) {
+            HashMap<Integer, RelationSet> relationsMap;
+
+            relationsMap = relationsMapList.get(outerIndex);
+
+            for (int innerIndex = 0; innerIndex < relationsArrays[outerIndex].length; innerIndex++) {
+                Relation relationObj;
+
+                relationObj = relationsArrays[outerIndex][innerIndex];
+
+                assertTrue(relationsMap.get(relationObj.getRelationPageNumber()).contains(relationObj));
+            }
         }
+    }
+
+    public void testProfileConstructorWithURL() throws MalformedURLException, ParseException {
+        URL urlObj;
+        Profile profileObj;
+        Handle handleObj = new Handle(username, instance);
+
+        urlObj = new URL(profileUrlString);
+        profileObj = new Profile(urlObj);
+
+        assertEquals(profileObj.getProfileHandle().toHandle(), handleObj.toHandle());
+        assertEquals(profileObj.getProfileConsidered(), false);
+        assertEquals(profileObj.getProfileSnippet(), "");
+        assertEquals(profileObj.getFollowersMap().size(), 0);
+        assertEquals(profileObj.getFollowingMap().size(), 0);
+    }
+
+    public void testProfileConstructorWithHandleConsideredAndSnippetAndMaps() throws MalformedURLException {
+        ArrayList<HashMap<Integer, RelationSet>> relationsMapList;
+        Relation[][] relationsArrays = {followingArray, followersArray};
+        Profile profileObj;
+        Handle handleObj;
+        boolean consideredBoolean;
+        String snippetString;
+
+        handleObj = new Handle(1, "Gargron", "mastodon.social");
+        consideredBoolean = true;
+        snippetString = "Patreon\n\n     [ https://www.  patreon.com/mastodon  ](https://www.patreon.com/mastodon)\n\nOwner\n\nFounder, CEO"
+                        + "and lead developer  [ @  Mastodon\n](https://mastodon.social/@Mastodon) , Germany.\n\nJoined Mar 2016\n";
+
+        profileObj = new Profile(handleObj, consideredBoolean, snippetString, followingArray, followersArray);
+
+        relationsMapList = new ArrayList<HashMap<Integer, RelationSet>>();
+        relationsMapList.add(profileObj.getFollowingMap());
+        relationsMapList.add(profileObj.getFollowersMap());
+
+        assertEquals(profileObj.getProfileHandle().getHandleId(), 1);
+        assertEquals(profileObj.getProfileHandle().getUsername(), handleObj.getUsername());
+        assertEquals(profileObj.getProfileHandle().getInstance(), handleObj.getInstance());
+        assertEquals(profileObj.getProfileConsidered(), consideredBoolean);
+        assertEquals(profileObj.getProfileSnippet(), snippetString);
+
+        for (int outerIndex = 0; outerIndex < relationsArrays.length; outerIndex++) {
+            HashMap<Integer, RelationSet> relationsMap;
+
+            relationsMap = relationsMapList.get(outerIndex);
+
+            for (int innerIndex = 0; innerIndex < relationsArrays[outerIndex].length; innerIndex++) {
+                Relation relationObj;
+
+                relationObj = relationsArrays[outerIndex][innerIndex];
+
+                assertTrue(relationsMap.get(relationObj.getRelationPageNumber()).contains(relationObj));
+            }
+        }
+    }
+
+    public void testProfileConstructorWithHandleConsideredAndSnippet() throws MalformedURLException {
+        Profile profileObj;
+        Handle handleObj;
+        boolean consideredBoolean;
+        String snippetString;
+
+        handleObj = new Handle(1, "Gargron", "mastodon.social");
+        consideredBoolean = true;
+        snippetString = "Patreon\n\n     [ https://www.  patreon.com/mastodon  ](https://www.patreon.com/mastodon)\n\nOwner\n\nFounder, CEO"
+                        + "and lead developer  [ @  Mastodon\n](https://mastodon.social/@Mastodon) , Germany.\n\nJoined Mar 2016\n";
+
+        profileObj = new Profile(handleObj, consideredBoolean, snippetString);
+
+        assertEquals(profileObj.getProfileHandle().getHandleId(), 1);
+        assertEquals(profileObj.getProfileHandle().getUsername(), handleObj.getUsername());
+        assertEquals(profileObj.getProfileHandle().getInstance(), handleObj.getInstance());
+        assertEquals(profileObj.getProfileConsidered(), consideredBoolean);
+        assertEquals(profileObj.getProfileSnippet(), snippetString);
+    }
+
+    public void testProfileConstructorWithUsernameInstanceConsideredAndSnippetAndMaps() throws MalformedURLException {
+        ArrayList<HashMap<Integer, RelationSet>> relationsMapList;
+        Relation[][] relationsArrays = {followingArray, followersArray};
+        Profile profileObj;
+        String usernameString;
+        String instanceString;
+        String snippetString;
+        boolean consideredBoolean;
+
+        usernameString = "Gargron";
+        instanceString = "mastodon.social";
+        consideredBoolean = true;
+        snippetString = "Patreon\n\n     [ https://www.  patreon.com/mastodon  ](https://www.patreon.com/mastodon)\n\nOwner\n\nFounder, CEO"
+                        + "and lead developer  [ @  Mastodon\n](https://mastodon.social/@Mastodon) , Germany.\n\nJoined Mar 2016\n";
+
+        profileObj = new Profile(usernameString, instanceString, consideredBoolean, snippetString, followingArray, followersArray);
+
+        relationsMapList = new ArrayList<HashMap<Integer, RelationSet>>();
+        relationsMapList.add(profileObj.getFollowingMap());
+        relationsMapList.add(profileObj.getFollowersMap());
+
+        assertEquals(profileObj.getProfileHandle().getHandleId(), -1);
+        assertEquals(profileObj.getProfileHandle().getUsername(), usernameString);
+        assertEquals(profileObj.getProfileHandle().getInstance(), instanceString);
+        assertEquals(profileObj.getProfileConsidered(), consideredBoolean);
+        assertEquals(profileObj.getProfileSnippet(), snippetString);
+
+        for (int outerIndex = 0; outerIndex < relationsArrays.length; outerIndex++) {
+            HashMap<Integer, RelationSet> relationsMap;
+
+            relationsMap = relationsMapList.get(outerIndex);
+
+            for (int innerIndex = 0; innerIndex < relationsArrays[outerIndex].length; innerIndex++) {
+                Relation relationObj;
+
+                relationObj = relationsArrays[outerIndex][innerIndex];
+
+                assertTrue(relationsMap.get(relationObj.getRelationPageNumber()).contains(relationObj));
+            }
+        }
+    }
+
+    public void testProfileConstructorWithUsernameInstanceConsideredAndSnippet() throws MalformedURLException {
+        Profile profileObj;
+        String usernameString;
+        String instanceString;
+        String snippetString;
+        boolean consideredBoolean;
+
+        usernameString = "Gargron";
+        instanceString = "mastodon.social";
+        consideredBoolean = true;
+        snippetString = "Patreon\n\n     [ https://www.  patreon.com/mastodon  ](https://www.patreon.com/mastodon)\n\nOwner\n\nFounder, CEO"
+                        + "and lead developer  [ @  Mastodon\n](https://mastodon.social/@Mastodon) , Germany.\n\nJoined Mar 2016\n";
+
+        profileObj = new Profile(usernameString, instanceString, consideredBoolean, snippetString);
+
+        assertEquals(profileObj.getProfileHandle().getHandleId(), -1);
+        assertEquals(profileObj.getProfileHandle().getUsername(), usernameString);
+        assertEquals(profileObj.getProfileHandle().getInstance(), instanceString);
+        assertEquals(profileObj.getProfileConsidered(), consideredBoolean);
+        assertEquals(profileObj.getProfileSnippet(), snippetString);
     }
 
     public void testProfileGenerateProfileURL() {

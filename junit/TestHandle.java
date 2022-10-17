@@ -41,6 +41,14 @@ public final class TestHandle extends TestCase {
         assertEquals(handleObj.getInstance(), instance);
     }
 
+    public void testGetHandleIdSetHandleId() {
+        handleObj = new Handle(username, instance);
+
+        assertEquals(handleObj.getHandleId(), -1);
+        handleObj.setHandleId(1);
+        assertEquals(handleObj.getHandleId(), 1);
+    }
+
     public void testHandleToHandle() {
         handleObj = new Handle(username, instance);
 
