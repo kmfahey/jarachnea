@@ -142,6 +142,7 @@ public final class Profile {
     }
 
     public URL getFollowingURL(final int pageNo) throws MalformedURLException {
+        System.out.println("generating following url");
         return new URL("https://" + profileHandle.getInstance() + "/users/" + profileHandle.getUsername() + "/following?page=" + pageNo);
     }
 
@@ -150,6 +151,7 @@ public final class Profile {
     }
 
     public URL getFollowersURL(final int pageNo) throws MalformedURLException {
+        System.out.println("generating following url");
         return new URL("https://" + profileHandle.getInstance() + "/users/" + profileHandle.getUsername() + "/followers?page=" + pageNo);
     }
 

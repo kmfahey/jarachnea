@@ -2,15 +2,15 @@ package jarachnea;
 
 import java.io.IOException;
 
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.params.HttpClientParams;
+import org.apache.commons.httpclient.params.HttpConnectionParams;
 import org.apache.commons.httpclient.methods.GetMethod;
 
-public class Client {
+public final class Client {
     private static final int DEFAULT_SOCKET_TIMEOUT = 5_000;
+    private static final long DEFAULT_CONNECTION_MANAGER_TIMEOUT = 5_000L;
+    private static final int DEFAULT_CONNECTION_TIMEOUT = 5_000;
 
     private HttpClient httpClientObj;
 
@@ -18,11 +18,13 @@ public class Client {
         HttpClientParams httpClientParamsObj;
 
         httpClientParamsObj = new HttpClientParams();
-        httpClientParamsObj.setSoTimeout(DEFAULT_SOCKET_TIMEOUT);
+        httpClientParamsObj.setParameter(HttpConnectionParams.SO_TIMEOUT, DEFAULT_SOCKET_TIMEOUT);
+        httpClientParamsObj.setParameter(HttpConnectionParams.CONNECTION_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT);
+        httpClientParamsObj.setParameter(HttpClientParams.CONNECTION_MANAGER_TIMEOUT, DEFAULT_CONNECTION_MANAGER_TIMEOUT);
         httpClientObj = new HttpClient(httpClientParamsObj);
     }
 
-    public Response retrieveUrl(String urlString) throws IOException {
+    public Response retrieveUrl(final String urlString) throws IOException {
         GetMethod getMethodObj;
         Response responseObj;
 

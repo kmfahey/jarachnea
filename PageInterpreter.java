@@ -34,7 +34,8 @@ public final class PageInterpreter {
     private final long numberOfMillisecondsInAWeek = 1000L * 60L * 60L * 24L * 7L;
 
     private final Pattern handleRegex = Pattern.compile("^.* (@[A-Za-z0-9._]+@[A-Za-z0-9._]+\\.[a-z]+):$");
-    private final Pattern hrefRegex = Pattern.compile("^/users/[A-Za-z0-9_.-]+/follow...\\?page=[0-9]+$");
+    private final Pattern hrefRelativeRegex = Pattern.compile("^/users/[A-Za-z0-9_.-]+/(follow...)(?:\\?page=[0-9]+)?$");
+    private final Pattern hrefAbsoluteRegex = Pattern.compile("^https://[A-Za-z0-9_.-]+\\.[a-z]+/users/[A-Za-z0-9_.-]+/(follow...)(?:\\?page=[0-9]+)?$");
     private final Pattern relationRegex = Pattern.compile("^https://([A-Za-z0-9_.-]+\\.[a-z]+)/@([A-Za-z0-9_.-]+)$");
     private final Pattern followersUrlRegex = Pattern.compile("^.*followers.*$");
     private final Pattern followingUrlRegex = Pattern.compile("^.*following.*$");
@@ -47,8 +48,12 @@ public final class PageInterpreter {
     private Handle userHandle;
     private Handle forwardingAddressHandle;
     private URL nextPageURL;
+    private URL followingPageURL;
+    private URL followersPageURL;
     private String profileBio;
     private RelationSet relationSetObj;
+    private int pageInterpretationOutcome;
+    private int parsingOutcomeFlag;
 
     public Document getPageDocument() {
         return pageDocument;
@@ -74,12 +79,55 @@ public final class PageInterpreter {
         return nextPageURL;
     }
 
+    public URL getFollowersPageURL() {
+        return followersPageURL;
+    }
+
+    public URL getFollowingPageURL() {
+        return followingPageURL;
+    }
+
     public String getProfileBio() {
         return profileBio;
     }
 
+    public int getParsingOutcomeFlag() {
+        return parsingOutcomeFlag;
+    }
+
+    public String getParsingOutcomeString() {
+        switch (parsingOutcomeFlag) {
+            case PAGE_TIMES_UNPARSEABLE:
+                return "PAGE_TIMES_UNPARSEABLE";
+            case PAGE_HAS_NO_POSTS:
+                return "PAGE_HAS_NO_POSTS";
+            case PAGE_POSTS_OUT_OF_DATE:
+                return "PAGE_POSTS_OUT_OF_DATE";
+            case PAGE_FORWARDING_UNPARSEABLE:
+                return "PAGE_FORWARDING_UNPARSEABLE";
+            case PAGE_IS_FORWARDING_PAGE:
+                return "PAGE_IS_FORWARDING_PAGE";
+            case PAGE_BIO_UNPARSEABLE:
+                return "PAGE_BIO_UNPARSEABLE";
+            case PAGE_NEXT_URLS_UNPARSEABLE:
+                return "PAGE_NEXT_URLS_UNPARSEABLE";
+            case FOUND_PAGE_BIO:
+                return "FOUND_PAGE_BIO";
+            case FOUND_NEXT_PAGE_URL:
+                return "FOUND_NEXT_PAGE_URL";
+            case FOUND_NO_NEXT_PAGE_URL:
+                return "FOUND_NO_NEXT_PAGE_URL";
+            default:
+                return "";
+        }
+    }
+
     public RelationSet getRelationSet() {
         return relationSetObj;
+    }
+
+    public int getPageInterpretationOutcome() {
+        return pageInterpretationOutcome;
     }
 
     public PageInterpreter(final Document pageDocumentObj, final Handle userHandleObj, final int pageTypeFlag, final int recentPostDaysCutoffVal)
@@ -89,6 +137,7 @@ public final class PageInterpreter {
         pageType = pageTypeFlag;
         recentPostDaysCutoff = recentPostDaysCutoffVal;
         forwardingAddressHandle = null;
+        nextPageURL = null;
     }
 
     public int interpretPage() throws ProcessingException, MalformedURLException {
@@ -96,42 +145,55 @@ public final class PageInterpreter {
             try {
                 loadPostDateList();
             } catch (HTMLReadingException exceptionObj) {
-                return PAGE_TIMES_UNPARSEABLE;
+                pageInterpretationOutcome = PAGE_TIMES_UNPARSEABLE;
+                return pageInterpretationOutcome;
             }
 
             try {
                 if (isForwardingPage()) {
-                    return PAGE_IS_FORWARDING_PAGE;
+                    detectRelationsPagesURLs();
+                    pageInterpretationOutcome = PAGE_IS_FORWARDING_PAGE;
+                    return pageInterpretationOutcome;
                 }
             } catch (HTMLReadingException exceptionObj) {
-                return PAGE_FORWARDING_UNPARSEABLE;
+                pageInterpretationOutcome = PAGE_FORWARDING_UNPARSEABLE;
+                return pageInterpretationOutcome;
             }
 
             if (((Integer) postDateList.size()).equals(0)) {
-                return PAGE_HAS_NO_POSTS;
+                detectRelationsPagesURLs();
+                pageInterpretationOutcome = PAGE_HAS_NO_POSTS;
+                return pageInterpretationOutcome;
+            } else if (!isMostRecentPostWithinCutoff()) {
+                detectRelationsPagesURLs();
+                pageInterpretationOutcome = PAGE_POSTS_OUT_OF_DATE;
+                return pageInterpretationOutcome;
+            } else {
+                try {
+                    detectRelationsPagesURLs();
+                    detectProfileBio();
+                } catch (HTMLReadingException exceptionObj) {
+                    pageInterpretationOutcome = PAGE_BIO_UNPARSEABLE;
+                    return pageInterpretationOutcome;
+                }
             }
 
-            if (!isMostRecentPostWithinCutoff()) {
-                return PAGE_POSTS_OUT_OF_DATE;
-            }
-
-            try {
-                detectProfileBio();
-            } catch (HTMLReadingException exceptionObj) {
-                return PAGE_BIO_UNPARSEABLE;
-            }
-            return FOUND_PAGE_BIO;
+            pageInterpretationOutcome = FOUND_PAGE_BIO;
+            return pageInterpretationOutcome;
         } else {
             generateRelationSet();
 
             try {
                 if (detectNextPageURL()) {
-                    return FOUND_NEXT_PAGE_URL;
+                    pageInterpretationOutcome = FOUND_NEXT_PAGE_URL;
+                    return pageInterpretationOutcome;
                 } else {
-                    return FOUND_NO_NEXT_PAGE_URL;
+                    pageInterpretationOutcome = FOUND_NO_NEXT_PAGE_URL;
+                    return pageInterpretationOutcome;
                 }
             } catch (HTMLReadingException | MalformedURLException exceptionObj) {
-                return PAGE_NEXT_URLS_UNPARSEABLE;
+                pageInterpretationOutcome = PAGE_NEXT_URLS_UNPARSEABLE;
+                return pageInterpretationOutcome;
             }
         }
     }
@@ -157,6 +219,8 @@ public final class PageInterpreter {
 
         if (urlPageNumberMatcher.matches()) {
             relationPageNumber = Integer.valueOf(urlPageNumberMatcher.group(1));
+        } else if (documentLocation.endsWith("followers") || documentLocation.endsWith("following")) {
+            relationPageNumber = 1;
         } else {
             throw new ProcessingException("unable to detect page number in URL " + documentLocation + " using regular expression " + pageNumberUrlQsaRegex.pattern());
         }
@@ -184,7 +248,7 @@ public final class PageInterpreter {
             hrefUrlString = aTag.attr("href");
             hrefMatcher = relationRegex.matcher(hrefUrlString);
 
-            if (! hrefMatcher.matches()) {
+            if (!hrefMatcher.matches()) {
                 throw new ProcessingException("unable to match URL " + hrefUrlString + " against regular expression " + relationRegex.pattern());
             }
 
@@ -203,7 +267,7 @@ public final class PageInterpreter {
             relationObj = new Relation(userHandle, relationHandleObj, relationTypeFlag, relationPageNumber);
             relationSetObj.add(relationObj);
         }
-        
+
         return true;
     }
 
@@ -219,13 +283,49 @@ public final class PageInterpreter {
         return pageTypeString;
     }
 
+    private boolean detectRelationsPagesURLs() throws MalformedURLException, ProcessingException {
+        Elements matchingElementsObj;
+
+        matchingElementsObj = pageDocument.getElementsByAttributeValueMatching("href", hrefAbsoluteRegex);
+
+        if (((Integer) matchingElementsObj.size()).equals(0)) {
+            return false;
+        }
+
+        for (int index = 0; index < matchingElementsObj.size(); index++) {
+            Element aHrefElementObj;
+            Matcher hrefMatcher;
+            String hrefStr;
+            String relationStr;
+
+            aHrefElementObj = matchingElementsObj.get(index);
+            hrefStr = aHrefElementObj.attr("href");
+            hrefMatcher = hrefAbsoluteRegex.matcher(hrefStr);
+            if (!hrefMatcher.matches()) {
+                throw new ProcessingException("unable match url " + hrefStr + " against regex " + hrefAbsoluteRegex.pattern());
+            } else {
+                relationStr = hrefMatcher.group(1);
+            }
+
+            if (relationStr.equals("followers")) {
+                followersPageURL = new URL(hrefStr);
+            } else if (relationStr.equals("following")) {
+                followingPageURL = new URL(hrefStr);
+            } else {
+                throw new ProcessingException("unable to match followers/following url " + hrefStr + " against either the followers or following url regexes");
+            }
+        }
+
+        return true;
+    }
+
     private boolean detectNextPageURL() throws HTMLReadingException, MalformedURLException {
         Elements matchingElementsObj;
         Element aHrefElementObj;
         String hrefAttributeString;
         String fullURLString;
 
-        matchingElementsObj = pageDocument.getElementsByAttributeValueMatching("href", hrefRegex);
+        matchingElementsObj = pageDocument.getElementsByAttributeValueMatching("href", hrefRelativeRegex);
         matchingElementsObj.removeIf((element) -> (element.attr("rel").equals("")));
         matchingElementsObj.removeIf((element) -> (element.attr("rel").equals("prev")));
 
@@ -234,7 +334,7 @@ public final class PageInterpreter {
         }
 
         aHrefElementObj = matchingElementsObj.first();
-        hrefAttributeString = aHrefElementObj.toString();
+        hrefAttributeString = aHrefElementObj.attr("href");
         fullURLString = "https://" + userHandle.getInstance() + hrefAttributeString;
 
         nextPageURL = new URL(fullURLString);
@@ -316,7 +416,11 @@ public final class PageInterpreter {
             profileBioDivTag = matchingElementsSecondTryObj.first();
         }
 
-        profileBio = profileBioDivTag.text();
+        if (profileBioDivTag == null) {
+            throw new HTMLReadingException("unable to detect a profile bio <div> tag with either class 'public-account-bio' or class 'account__header__content'");
+        } else {
+            profileBio = profileBioDivTag.text();
+        }
     }
 //
 }

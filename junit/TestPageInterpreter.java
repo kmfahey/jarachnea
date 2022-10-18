@@ -87,33 +87,33 @@ public final class TestPageInterpreter extends TestCase {
     private static final int INTERPRETER_CUTOFF_THREE_DAYS = 3;
     private static final int INTERPRETER_CUTOFF_ONE_DAY = 1;
 
-    private static final Handle profileHandle = new Handle("Gargron", "mastodon.social");
-    private static final Handle[] gargronFollowingPage1 = {new Handle("Gargron", "mastodon.social"),
-                                                           new Handle("Mastodon", "mastodon.social"),
-                                                           new Handle("ashfurrow", "masto.ashfurrow.com"),
-                                                           new Handle("danarel", "fosstodon.org"),
-                                                           new Handle("taviso", "mastodon.sdf.org"),
-                                                           new Handle("ThomasWaldmann", "chaos.social"),
-                                                           new Handle("akryum", "mastodon.social"),
-                                                           new Handle("vivaldibrowser", "mastodon.online"),
-                                                           new Handle("NotFrauKadse", "mastodon.social"),
-                                                           new Handle("muffinista", "mastodon.lol"),
-                                                           new Handle("camilabrun", "mastodon.art"),
-                                                           new Handle("a2_4am", "mastodon.social"),
-                                                           new Handle("_astronoMay", "mastodon.online")};
-    private static final Handle[] gargronFollowersPage1 = {new Handle("Mastodon", "mastodon.social"),
-                                                           new Handle("conr", "notacult.social"),
-                                                           new Handle("UnderscoreTalk", "mastodon.social"),
-                                                           new Handle("senor_massage", "mastodon.social"),
-                                                           new Handle("zachwood", "mastodon.social"),
-                                                           new Handle("Muzaffaralam", "c.im"),
-                                                           new Handle("stoom", "mastodon.social"),
-                                                           new Handle("JanaJaja1002", "mastodon.social"),
-                                                           new Handle("Lilalaunebaer", "sueden.social"),
-                                                           new Handle("airisdamon", "mastodon.social"),
-                                                           new Handle("Rahul355", "mastodon.social"),
-                                                           new Handle("kesch", "mastodon.social"),
-                                                           new Handle("vassie", "mastodon.social")};
+    private static final Handle PROFILE_HANDLE = new Handle("Gargron", "mastodon.social");
+    private static final Handle[] GARGRON_FOLLOWING_PAGE_1 = {new Handle("Gargron", "mastodon.social"),
+                                                              new Handle("Mastodon", "mastodon.social"),
+                                                              new Handle("ashfurrow", "masto.ashfurrow.com"),
+                                                              new Handle("danarel", "fosstodon.org"),
+                                                              new Handle("taviso", "mastodon.sdf.org"),
+                                                              new Handle("ThomasWaldmann", "chaos.social"),
+                                                              new Handle("akryum", "mastodon.social"),
+                                                              new Handle("vivaldibrowser", "mastodon.online"),
+                                                              new Handle("NotFrauKadse", "mastodon.social"),
+                                                              new Handle("muffinista", "mastodon.lol"),
+                                                              new Handle("camilabrun", "mastodon.art"),
+                                                              new Handle("a2_4am", "mastodon.social"),
+                                                              new Handle("_astronoMay", "mastodon.online")};
+    private static final Handle[] GARGRON_FOLLOWERS_PAGE_1 = {new Handle("Mastodon", "mastodon.social"),
+                                                              new Handle("conr", "notacult.social"),
+                                                              new Handle("UnderscoreTalk", "mastodon.social"),
+                                                              new Handle("senor_massage", "mastodon.social"),
+                                                              new Handle("zachwood", "mastodon.social"),
+                                                              new Handle("Muzaffaralam", "c.im"),
+                                                              new Handle("stoom", "mastodon.social"),
+                                                              new Handle("JanaJaja1002", "mastodon.social"),
+                                                              new Handle("Lilalaunebaer", "sueden.social"),
+                                                              new Handle("airisdamon", "mastodon.social"),
+                                                              new Handle("Rahul355", "mastodon.social"),
+                                                              new Handle("kesch", "mastodon.social"),
+                                                              new Handle("vassie", "mastodon.social")};
 
     public void testPageInterpreterProfilePageConstructor() throws ProcessingException {
         Fetcher fetcherObj;
@@ -223,24 +223,24 @@ public final class TestPageInterpreter extends TestCase {
 
         assertEquals((Integer) relationSetObj.getRelationType(), (Integer) Relation.IS_FOLLOWED_BY);
         assertEquals(relationSetObj.getRelationPageNumber(), 1);
-        assertEquals(relationSetObj.getProfileHandle().getUsername(), profileHandle.getUsername());
-        assertEquals(relationSetObj.getProfileHandle().getInstance(), profileHandle.getInstance());
+        assertEquals(relationSetObj.getProfileHandle().getUsername(), PROFILE_HANDLE.getUsername());
+        assertEquals(relationSetObj.getProfileHandle().getInstance(), PROFILE_HANDLE.getInstance());
 
         pageInterpreterRelationSetIter = relationSetObj.iterator();
-        
+
         while (pageInterpreterRelationSetIter.hasNext()) {
             Relation relationObj;
 
             booleanSet = new HashSet<Boolean>();
             relationObj = pageInterpreterRelationSetIter.next();
 
-            for (int index = 0; index < gargronFollowingPage1.length; index++) {
+            for (int index = 0; index < GARGRON_FOLLOWING_PAGE_1.length; index++) {
                 Handle handleObj;
 
-                handleObj = gargronFollowingPage1[index];
+                handleObj = GARGRON_FOLLOWING_PAGE_1[index];
 
-                booleanSet.add(relationObj.getRelationHandle().getUsername().equals(handleObj.getUsername()) &&
-                               relationObj.getRelationHandle().getInstance().equals(handleObj.getInstance()));
+                booleanSet.add(relationObj.getRelationHandle().getUsername().equals(handleObj.getUsername())
+                               && relationObj.getRelationHandle().getInstance().equals(handleObj.getInstance()));
             }
 
             assertTrue(booleanSet.contains(true));
@@ -254,8 +254,8 @@ public final class TestPageInterpreter extends TestCase {
 
             relationObj = (Relation) pageInterpreterRelationSetIter.next();
 
-            booleanSet.add(relationObj.getRelationHandle().getUsername().equals(profileHandle.getUsername()) &&
-                           relationObj.getRelationHandle().getInstance().equals(profileHandle.getInstance()));
+            booleanSet.add(relationObj.getRelationHandle().getUsername().equals(PROFILE_HANDLE.getUsername())
+                           && relationObj.getRelationHandle().getInstance().equals(PROFILE_HANDLE.getInstance()));
         }
 
         assertFalse(booleanSet.contains(true));
@@ -288,24 +288,24 @@ public final class TestPageInterpreter extends TestCase {
 
         assertEquals((Integer) relationSetObj.getRelationType(), (Integer) Relation.IS_FOLLOWER_OF);
         assertEquals(relationSetObj.getRelationPageNumber(), 1);
-        assertEquals(relationSetObj.getProfileHandle().getUsername(), profileHandle.getUsername());
-        assertEquals(relationSetObj.getProfileHandle().getInstance(), profileHandle.getInstance());
+        assertEquals(relationSetObj.getProfileHandle().getUsername(), PROFILE_HANDLE.getUsername());
+        assertEquals(relationSetObj.getProfileHandle().getInstance(), PROFILE_HANDLE.getInstance());
 
         pageInterpreterRelationSetIter = relationSetObj.iterator();
-        
+
         while (pageInterpreterRelationSetIter.hasNext()) {
             Relation relationObj;
 
             booleanSet = new HashSet<Boolean>();
             relationObj = pageInterpreterRelationSetIter.next();
 
-            for (int index = 0; index < gargronFollowersPage1.length; index++) {
+            for (int index = 0; index < GARGRON_FOLLOWERS_PAGE_1.length; index++) {
                 Handle handleObj;
 
-                handleObj = gargronFollowersPage1[index];
+                handleObj = GARGRON_FOLLOWERS_PAGE_1[index];
 
-                booleanSet.add(relationObj.getRelationHandle().getUsername().equals(handleObj.getUsername()) &&
-                               relationObj.getRelationHandle().getInstance().equals(handleObj.getInstance()));
+                booleanSet.add(relationObj.getRelationHandle().getUsername().equals(handleObj.getUsername())
+                               && relationObj.getRelationHandle().getInstance().equals(handleObj.getInstance()));
             }
 
             assertTrue(booleanSet.contains(true));
@@ -319,8 +319,8 @@ public final class TestPageInterpreter extends TestCase {
 
             relationObj = (Relation) pageInterpreterRelationSetIter.next();
 
-            booleanSet.add(relationObj.getRelationHandle().getUsername().equals(profileHandle.getUsername()) &&
-                           relationObj.getRelationHandle().getInstance().equals(profileHandle.getInstance()));
+            booleanSet.add(relationObj.getRelationHandle().getUsername().equals(PROFILE_HANDLE.getUsername())
+                           && relationObj.getRelationHandle().getInstance().equals(PROFILE_HANDLE.getInstance()));
         }
 
         assertFalse(booleanSet.contains(true));

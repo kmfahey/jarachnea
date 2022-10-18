@@ -22,6 +22,7 @@ import jarachnea.RelationSet;
 import jarachnea.Profile;
 
 public final class TestDataStore extends TestCase {
+
     private static final Instance TEST_MALFUNCTIONING_INSTANCE = new Instance("100club.social", Instance.MALFUNCTIONING);
     private static final Instance TEST_SUSPENDED_INSTANCE = new Instance("anime.website", Instance.SUSPENDED);
     private static final Instance TEST_UNPARSEABLE_INSTANCE = new Instance("56k.space", Instance.UNPARSEABLE);
@@ -363,6 +364,7 @@ public final class TestDataStore extends TestCase {
     public void testHandleStoreAndRetrieve() throws SQLException {
         ArrayList<Handle> handleList;
         Handle retrievedHandle;
+        Handle testHandleWithRemovedHandleId;
 
         dataStoreObj.storeHandle(TEST_HANDLE_WITHOUT_HANDLE_ID);
 
@@ -384,5 +386,13 @@ public final class TestDataStore extends TestCase {
         assertEquals(retrievedHandle.getHandleId(), TEST_HANDLE_WITH_HANDLE_ID.getHandleId());
         assertEquals(retrievedHandle.getUsername(), TEST_HANDLE_WITH_HANDLE_ID.getUsername());
         assertEquals(retrievedHandle.getInstance(), TEST_HANDLE_WITH_HANDLE_ID.getInstance());
+
+        dataStoreObj.clearTable("handles");
+
+        testHandleWithRemovedHandleId = new Handle(TEST_HANDLE_WITH_HANDLE_ID.getUsername(), TEST_HANDLE_WITH_HANDLE_ID.getInstance());
+
+        dataStoreObj.storeHandle(testHandleWithRemovedHandleId);
+
+        assertTrue(testHandleWithRemovedHandleId.getHandleId() != -1);
     }
 }

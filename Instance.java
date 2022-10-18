@@ -26,6 +26,26 @@ public final class Instance {
         return instanceStatus;
     }
 
+    public void setInstanceStatus(final int statusFlag) {
+        instanceStatus = statusFlag;
+    }
+
+    public String getInstanceStatusString() {
+        String instanceStatusStr;
+
+        if (instanceStatus == Instance.SUSPENDED) {
+            instanceStatusStr = "SUSPENDED";
+        } else if (instanceStatus == Instance.MALFUNCTIONING) {
+            instanceStatusStr = "MALFUNCTIONING";
+        } else if (instanceStatus == Instance.UNPARSEABLE) {
+            instanceStatusStr = "UNPARSEABLE";
+        } else {
+            instanceStatusStr = "IN_GOOD_STANDING";
+        }
+
+        return instanceStatusStr;
+    }
+
     public Instance(final String instanceHostnameString, final int instanceStatusFlag) {
         instanceHostname = instanceHostnameString;
         instanceStatus = instanceStatusFlag;

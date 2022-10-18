@@ -35,4 +35,17 @@ public final class TestInstance extends TestCase {
 
         assertTrue(instanceObj.rateLimitExpiredYet());
     }
+
+    public void testGetInstanceStatusString() {
+        Instance instanceObj;
+
+        instanceObj = new Instance(INSTANCE_HOSTNAME, Instance.SUSPENDED);
+        assertEquals(instanceObj.getInstanceStatusString(), "SUSPENDED");
+        instanceObj = new Instance(INSTANCE_HOSTNAME, Instance.MALFUNCTIONING);
+        assertEquals(instanceObj.getInstanceStatusString(), "MALFUNCTIONING");
+        instanceObj = new Instance(INSTANCE_HOSTNAME, Instance.UNPARSEABLE);
+        assertEquals(instanceObj.getInstanceStatusString(), "UNPARSEABLE");
+        instanceObj = new Instance(INSTANCE_HOSTNAME, Instance.IN_GOOD_STANDING);
+        assertEquals(instanceObj.getInstanceStatusString(), "IN_GOOD_STANDING");
+    }
 }

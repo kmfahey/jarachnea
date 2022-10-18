@@ -65,7 +65,7 @@ public final class DataStore {
         statementObj = dbConnection.prepareStatement("SELECT handles.handle_id, handles.username, handles.instance "
                                                      + "FROM handles LEFT JOIN profiles "
                                                      + "ON handles.handle_id = profiles.profile_handle_id "
-                                                     + "WHERE profiles.profile_handle_id IS NULL;", HANDLES_COLUMNS_WITH_HANDLE_ID);
+                                                     + "WHERE profiles.profile_handle_id IS NULL ORDER BY RAND();", HANDLES_COLUMNS_WITH_HANDLE_ID);
         retrievalResults = statementObj.executeQuery();
 
         retrievedHandlesList = new ArrayList<Handle>();
@@ -283,7 +283,7 @@ public final class DataStore {
         }
     }
 
-    public boolean storeHandle(final Handle handleObj) throws SQLException {
+    public void storeHandle(final Handle handleObj) throws SQLException {
         Formatter formatterObj;
         String[] instanceValuesWithoutHandleId = {null, null};
         String[] instanceValuesWithHandleId = {null, null, null};
@@ -291,14 +291,13 @@ public final class DataStore {
         if (handleObj.getHandleId() == -1) {
             instanceValuesWithoutHandleId[0] = handleObj.getUsername();
             instanceValuesWithoutHandleId[1] = handleObj.getInstance();
-
-            return insertIntoTable("handles", HANDLES_COLUMNS_WITHOUT_HANDLE_ID, instanceValuesWithoutHandleId);
+            insertIntoTable("handles", HANDLES_COLUMNS_WITHOUT_HANDLE_ID, instanceValuesWithoutHandleId);
+            updateHandleWithHandleId(handleObj);
         } else {
             instanceValuesWithHandleId[0] = ((Integer) handleObj.getHandleId()).toString();
             instanceValuesWithHandleId[1] = handleObj.getUsername();
             instanceValuesWithHandleId[2] = handleObj.getInstance();
-
-            return insertIntoTable("handles", HANDLES_COLUMNS_WITH_HANDLE_ID, instanceValuesWithHandleId);
+            insertIntoTable("handles", HANDLES_COLUMNS_WITH_HANDLE_ID, instanceValuesWithHandleId);
         }
     }
 

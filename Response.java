@@ -1,6 +1,10 @@
 package jarachnea;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+
+import java.io.InputStream;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -8,13 +12,17 @@ import org.jsoup.nodes.Document;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.methods.GetMethod;
 
-public class Response {
+public final class Response {
     private int statusCode;
     private int xRatelimitLimit;
     private String bodyString;
     private Document bodyDocument;
-    private GetMethod methodObj;
-    private String charsetName;
+    private String charSetName;
+    private URL requestURL;
+
+    public URL getRequestURL() {
+        return requestURL;
+    }
 
     public int getStatusCode() {
         return statusCode;
@@ -24,34 +32,34 @@ public class Response {
         return xRatelimitLimit;
     }
 
-    public String getBodyString() {
-        return bodyString;
-    }
-
     public Document getBodyDocument() {
         return bodyDocument;
     }
 
-    public String getCharsetName() {
-        return charsetName;
+    public String getCharSetName() {
+        return charSetName;
     }
 
-    public Response(GetMethod methodObj) throws IOException {
+    public Response(final GetMethod getMethodObj) throws IOException, MalformedURLException {
         Header xRatelimitLimitHeader;
+        InputStream responseBodyStream;
 
-        statusCode = methodObj.getStatusCode();
+        requestURL = new URL(getMethodObj.getURI().toString());
+        statusCode = getMethodObj.getStatusCode();
         if (statusCode == 429) {
-            xRatelimitLimitHeader = methodObj.getResponseHeader("X-Ratelimit-Limit");
+            xRatelimitLimitHeader = getMethodObj.getResponseHeader("X-Ratelimit-Limit");
             if (xRatelimitLimitHeader != null) {
                 xRatelimitLimit = Integer.valueOf(xRatelimitLimitHeader.getValue());
             } else {
                 xRatelimitLimit = 300;
             }
         } else if (statusCode == 200) {
-            bodyString = methodObj.getResponseBodyAsString();
-            if (bodyString != null) {
-                bodyDocument = Jsoup.parse(bodyString, methodObj.getURI().toString());
+            charSetName = getMethodObj.getResponseCharSet().toUpperCase();
+            responseBodyStream = getMethodObj.getResponseBodyAsStream();
+            if (responseBodyStream != null) {
+                bodyDocument = Jsoup.parse(responseBodyStream, charSetName, getMethodObj.getURI().toString());
             }
         }
+        getMethodObj.releaseConnection();
     }
 }
