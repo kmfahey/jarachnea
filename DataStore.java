@@ -451,7 +451,7 @@ public final class DataStore {
         valuesStatement = "(";
 
         for (int valuesIndex = 0; valuesIndex < sqlValues.length; valuesIndex++) {
-            valuesStatement += '"' + sqlValues[valuesIndex] + '"';
+            valuesStatement += '"' + sqlValues[valuesIndex].replace("\"", "\\\"") + '"';
             if (valuesIndex < sqlValues.length - 1) {
                 valuesStatement += ", ";
             }

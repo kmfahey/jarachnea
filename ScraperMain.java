@@ -32,8 +32,7 @@ public class ScraperMain {
     private static Logger loggerObj;
 
     public static void main(final String[] args) throws IOException, SQLException, InterruptedException, ParseException {
-        ScraperRunnableProfiles scraperRunnableProfilesObj;
-        ScraperRunnableRelations scraperRunnableRelationsObj;
+        ScraperLoop scraperLoopObj;
         File iniFileObj;
         Ini iniObj;
         Handler[] existingHandlers;
@@ -44,6 +43,9 @@ public class ScraperMain {
 
         optionsObj = new Options();
         optionsObj.addOption("p", false, "fetch profiles only, disregard following & followers pages");
+        optionsObj.addOption("r", false, "fetch both profiles and relations");
+        optionsObj.addOption("H", false, "load unfetched handles from the `handles` table");
+        optionsObj.addOption("R", false, "load unfetched handles from the `relations` table");
         commandLineParserObj = new DefaultParser();
 
         try {
@@ -52,6 +54,16 @@ public class ScraperMain {
             System.out.println("error in parsing commandline options: " + exceptionObj.getMessage());
             System.exit(0);
             return;
+        }
+
+        if (!commandLineObj.hasOption("p") && !commandLineObj.hasOption("r")) {
+            System.out.println("please specify one of either the -p flag or the -r flag on the commandline to choose the scraping mode");
+            System.exit(0);
+        }
+
+        if (!commandLineObj.hasOption("H") && !commandLineObj.hasOption("R")) {
+            System.out.println("please specify one of either the -H flag or the -R flag on the commandline to indicate where to load pending handles from");
+            System.exit(0);
         }
 
         iniFileObj = new File(INI_FILE_PATH);
@@ -80,18 +92,20 @@ public class ScraperMain {
         instanceMap = new ConcurrentHashMap<String, Instance>(dataStoreObj.retrieveBadInstances());
         loggerObj.log(Level.INFO, "loaded bad instances list, " + instanceMap.size() + " entries");
 
-        if (commandLineObj.hasOption("p")) {
+        if (commandLineObj.hasOption("H")) {
             unfetchedHandlesQueue = new ConcurrentLinkedQueue<Handle>(dataStoreObj.retrieveUnfetchedHandlesFromRelations());
-            loggerObj.log(Level.INFO, "loaded unfetched handles list, " + unfetchedHandlesQueue.size() + " entries");
-
-            scraperRunnableProfilesObj = new ScraperRunnableProfiles(instanceMap, unfetchedHandlesQueue, host, username, password, database);
-            scraperRunnableProfilesObj.run();
         } else {
             unfetchedHandlesQueue = new ConcurrentLinkedQueue<Handle>(dataStoreObj.retrieveUnfetchedHandlesFromHandles());
-            loggerObj.log(Level.INFO, "loaded unfetched handles list, " + unfetchedHandlesQueue.size() + " entries");
+        }
 
-            scraperRunnableRelationsObj = new ScraperRunnableRelations(instanceMap, unfetchedHandlesQueue, host, username, password, database);
-            scraperRunnableRelationsObj.run();
+        loggerObj.log(Level.INFO, "loaded unfetched handles list, " + unfetchedHandlesQueue.size() + " entries");
+
+        scraperLoopObj = new ScraperLoop(instanceMap, unfetchedHandlesQueue, host, username, password, database);
+
+        if (commandLineObj.hasOption("p")) {
+            scraperLoopObj.executeMainLoop(false);
+        } else {
+            scraperLoopObj.executeMainLoop(true);
         }
     }
 }

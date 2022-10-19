@@ -8,6 +8,6 @@ public final class LogFormatter extends Formatter {
 
     @Override
     public String format(final LogRecord record) {
-        return "[" + new Date(record.getMillis()) + "] {" + record.getThreadID() + "} " + record.getMessage() + "\n";
+        return "[" + new Date(record.getMillis()) + "] {" + record.getThreadID() + "} " + record.getLevel().getName() + ": " + record.getMessage() + "\n";
     }
 }

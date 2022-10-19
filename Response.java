@@ -36,6 +36,10 @@ public final class Response {
         return bodyDocument;
     }
 
+    public String getBodyString() {
+        return bodyString;
+    }
+
     public String getCharSetName() {
         return charSetName;
     }
