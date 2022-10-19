@@ -60,72 +60,30 @@ public final class DataStore {
     }
 
     public ArrayList<Handle> retrieveUnfetchedHandlesFromRelationsVsProfiles() throws SQLException {
-        ArrayList<Handle> retrievedHandlesList;
-        PreparedStatement statementObj;
-        ResultSet retrievalResults;
-
-        statementObj = dbConnection.prepareStatement("SELECT DISTINCT relation_handle_id, relation_username, relation_instance FROM relations "
-                                                     + "LEFT JOIN profiles ON relations.relation_handle_id = profiles.profile_handle_id "
-                                                     + "WHERE profiles.profile_handle_id IS NULL;", RELATIONS_HANDLE_COLUMNS);
-
-        retrievalResults = statementObj.executeQuery();
-
-        retrievedHandlesList = new ArrayList<Handle>();
-
-        while (retrievalResults.next()) {
-            String handleId;
-            String usernameString;
-            String instanceString;
-            Handle handleObj;
-
-            handleId = retrievalResults.getString("relation_handle_id");
-            usernameString = retrievalResults.getString("relation_username");
-            instanceString = retrievalResults.getString("relation_instance");
-            handleObj = new Handle(Integer.valueOf(handleId), usernameString, instanceString);
-
-            retrievedHandlesList.add(handleObj);
-        }
-
-        return retrievedHandlesList;
+        return retrieveUnfetchedHandlesSQL("SELECT DISTINCT relation_handle_id, relation_username, relation_instance FROM relations "
+                                           + "LEFT JOIN profiles ON relations.relation_handle_id = profiles.profile_handle_id "
+                                           + "WHERE profiles.profile_handle_id IS NULL;", RELATIONS_HANDLE_COLUMNS);
     }
 
     public ArrayList<Handle> retrieveUnfetchedHandlesFromProfilesVsRelations() throws SQLException {
-        ArrayList<Handle> retrievedHandlesList;
-        PreparedStatement statementObj;
-        ResultSet retrievalResults;
-
-        statementObj = dbConnection.prepareStatement("SELECT profiles.profile_handle_id, username, instance FROM profiles "
-                                                     + "LEFT JOIN relations ON profiles.profile_handle_id = relations.profile_handle_id "
-                                                     + "WHERE relations.profile_handle_id IS NULL ORDER BY RAND();", PROFILES_HANDLE_COLUMNS);
-        retrievalResults = statementObj.executeQuery();
-
-        retrievedHandlesList = new ArrayList<Handle>();
-
-        while (retrievalResults.next()) {
-            String handleId;
-            String usernameString;
-            String instanceString;
-            Handle handleObj;
-
-            handleId = retrievalResults.getString("profile_handle_id");
-            usernameString = retrievalResults.getString("username");
-            instanceString = retrievalResults.getString("instance");
-            handleObj = new Handle(Integer.valueOf(handleId), usernameString, instanceString);
-
-            retrievedHandlesList.add(handleObj);
-        }
-
-        return retrievedHandlesList;
+        return retrieveUnfetchedHandlesSQL("SELECT profiles.profile_handle_id, username, instance FROM profiles "
+                                           + "LEFT JOIN relations ON profiles.profile_handle_id = relations.profile_handle_id "
+                                           + "WHERE relations.profile_handle_id IS NULL ORDER BY RAND();", PROFILES_HANDLE_COLUMNS);
     }
+
     public ArrayList<Handle> retrieveUnfetchedHandlesFromHandlesVsProfiles() throws SQLException {
+        return retrieveUnfetchedHandlesSQL("SELECT handles.handle_id, handles.username, handles.instance "
+                                           + "FROM handles LEFT JOIN profiles "
+                                           + "ON handles.handle_id = profiles.profile_handle_id "
+                                           + "WHERE profiles.profile_handle_id IS NULL ORDER BY RAND();", HANDLES_COLUMNS_WITH_HANDLE_ID);
+    }
+
+    private ArrayList<Handle> retrieveUnfetchedHandlesSQL(final String sqlStatementStr, final String[] selectKeys) throws SQLException {
         ArrayList<Handle> retrievedHandlesList;
         PreparedStatement statementObj;
         ResultSet retrievalResults;
 
-        statementObj = dbConnection.prepareStatement("SELECT handles.handle_id, handles.username, handles.instance "
-                                                     + "FROM handles LEFT JOIN profiles "
-                                                     + "ON handles.handle_id = profiles.profile_handle_id "
-                                                     + "WHERE profiles.profile_handle_id IS NULL ORDER BY RAND();", HANDLES_COLUMNS_WITH_HANDLE_ID);
+        statementObj = dbConnection.prepareStatement(sqlStatementStr, HANDLES_COLUMNS_WITH_HANDLE_ID);
         retrievalResults = statementObj.executeQuery();
 
         retrievedHandlesList = new ArrayList<Handle>();
@@ -136,9 +94,9 @@ public final class DataStore {
             String instanceString;
             Handle handleObj;
 
-            handleId = retrievalResults.getString("handle_id");
-            usernameString = retrievalResults.getString("username");
-            instanceString = retrievalResults.getString("instance");
+            handleId = retrievalResults.getString(selectKeys[0]);
+            usernameString = retrievalResults.getString(selectKeys[1]);
+            instanceString = retrievalResults.getString(selectKeys[2]);
             handleObj = new Handle(Integer.valueOf(handleId), usernameString, instanceString);
 
             retrievedHandlesList.add(handleObj);

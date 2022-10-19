@@ -1,7 +1,6 @@
 package jarachnea;
 
 import java.io.IOException;
-import java.lang.Math;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.sql.SQLException;
@@ -162,7 +161,7 @@ class ScraperLoop {
         }
     }
 
-    private final URL handleInstancePreprocessing(final Instance instanceObj, final Handle nextHandleObj, final boolean saveProfiles) {
+    private URL handleInstancePreprocessing(final Instance instanceObj, final Handle nextHandleObj, final boolean saveProfiles) {
         Profile profileObj;
         URL profileURL;
         float rateLimitSecondsLeft;
@@ -214,8 +213,8 @@ class ScraperLoop {
 
         return profileURL;
     }
-            
-    private final PageInterpreter handleProcessingProfile(final URL profileURL, final Handle nextHandleObj, final boolean saveProfiles) {
+
+    private PageInterpreter handleProcessingProfile(final URL profileURL, final Handle nextHandleObj, final boolean saveProfiles) {
         PageInterpreter profilePageInterpreterObj;
         Profile profileObj;
         String profileBioStr;
@@ -251,7 +250,7 @@ class ScraperLoop {
             return null;
         }
 
-        if (!saveProfiles) {
+        if (saveProfiles) {
             profileBioStr = profilePageInterpreterObj.getProfileBio();
 
             if (profileBioStr != null) {
@@ -279,7 +278,7 @@ class ScraperLoop {
         return profilePageInterpreterObj;
     }
 
-    private final void processRelations(final URL nextRelationsURLObj, final String relationsStr, final Handle nextHandleObj,
+    private void processRelations(final URL nextRelationsURLObj, final String relationsStr, final Handle nextHandleObj,
                                         final boolean saveProfiles) {
         PageInterpreter relationsPageInterpreterObj;
         URL nextRelationsURL;
@@ -381,7 +380,7 @@ class ScraperLoop {
         }
     }
 
-    private final void handleStatusCode429(final Response responseObj, final Handle nextHandleObj, final int statusCode) {
+    private void handleStatusCode429(final Response responseObj, final Handle nextHandleObj, final int statusCode) {
         Instance instanceObj;
         int rateLimitSeconds;
 
@@ -397,7 +396,7 @@ class ScraperLoop {
         loggerObj.log(Level.INFO, "scraper is rate-limited, " + rateLimitSeconds + " seconds remaining");
     }
 
-    private final void handleStatusCodesIn400sOr500s(final Response responseObj, final Handle nextHandleObj, final int statusCode,
+    private void handleStatusCodesIn400sOr500s(final Response responseObj, final Handle nextHandleObj, final int statusCode,
                                                      final boolean saveProfiles) {
         Instance instanceObj;
         Profile profileObj;
@@ -455,7 +454,7 @@ class ScraperLoop {
         }
     }
 
-    private final PageInterpreter handleStatusCode200(final Response responseObj, final Handle nextHandleObj, final String mastodonURLString,
+    private PageInterpreter handleStatusCode200(final Response responseObj, final Handle nextHandleObj, final String mastodonURLString,
                                                       final boolean saveProfiles) throws ProcessingException, MalformedURLException {
         PageInterpreter pageInterpreterObj;
         int pageTypeFlag;
@@ -504,7 +503,7 @@ class ScraperLoop {
         return pageInterpreterObj;
     }
 
-    private final boolean handleProfileIsUnparseable(final Response responseObj, final Handle nextHandleObj, final int parsingOutcomeFlag,
+    private boolean handleProfileIsUnparseable(final Response responseObj, final Handle nextHandleObj, final int parsingOutcomeFlag,
                                                      final boolean saveProfiles) throws ProcessingException {
         Profile profileObj;
         Instance instanceObj;
@@ -572,7 +571,7 @@ class ScraperLoop {
         return true;
     }
 
-    private final boolean handleForwardingPageProfile(final PageInterpreter pageInterpreterObj, final Response responseObj,
+    private boolean handleForwardingPageProfile(final PageInterpreter pageInterpreterObj, final Response responseObj,
                                                       final Handle nextHandleObj, final boolean saveProfiles) {
         Handle forwardingHandle;
         Profile profileObj;
@@ -616,7 +615,7 @@ class ScraperLoop {
         return true;
     }
 
-    private final boolean handleProfileWithNoOrOldPosts(final Response responseObj, final Handle nextHandleObj, final int parsingOutcomeFlag,
+    private boolean handleProfileWithNoOrOldPosts(final Response responseObj, final Handle nextHandleObj, final int parsingOutcomeFlag,
                                                         final boolean saveProfiles) {
         Profile profileObj;
 
