@@ -14,7 +14,7 @@ import java.util.logging.LogManager;
 import java.util.Random;
 import java.util.regex.Pattern;
 
-class ScraperRunnable implements Runnable {
+class ScraperRunnableProfiles implements Runnable {
     private static final int PROFILE_TOOT_AGE_CUTOFF_DAYS = 7;
     private DataStore dataStoreObj;
     private Client clientObj;
@@ -30,8 +30,10 @@ class ScraperRunnable implements Runnable {
     private ConcurrentHashMap<String, Instance> instanceMap;
     private ConcurrentLinkedQueue<Handle> unfetchedHandlesQueue;
 
-    public ScraperRunnable(final ConcurrentHashMap<String, Instance> instanceMapObj, final ConcurrentLinkedQueue<Handle> unfetchedHandlesQueueObj,
-                           final String host, final String username, final String password, final String database) throws IOException, SQLException {
+    public ScraperRunnableProfiles(final ConcurrentHashMap<String, Instance> instanceMapObj,
+                                   final ConcurrentLinkedQueue<Handle> unfetchedHandlesQueueObj,
+                                   final String host, final String username, final String password,
+                                   final String database) throws IOException, SQLException {
 
         Handler[] existingHandlers;
         ConsoleHandler handlerObj;
@@ -151,93 +153,6 @@ class ScraperRunnable implements Runnable {
                                               + exceptionObj.getMessage());
                 }
             }
-
-            nextFollowingURL = profilePageInterpreterObj.getFollowingPageURL();
-
-            if (nextFollowingURL != null) {
-                loggerObj.log(Level.INFO, "generated following page url for " + nextHandleObj.toHandle() + ": " + nextFollowingURL.toString());
-
-                while (nextFollowingURL != null) {
-                    try {
-                        loggerObj.log(Level.INFO, "fetching following page url for " + nextHandleObj.toHandle() + ": " + nextFollowingURL.toString());
-                        followingPageInterpreterObj = fetchAndParseURL(nextFollowingURL, nextHandleObj);
-                    } catch (ProcessingException exceptionObj) {
-                        loggerObj.log(Level.SEVERE, "fetching url " + nextFollowingURL.toString() + " failed with malformed url error: "
-                                                    + exceptionObj.getMessage());
-                        break;
-                    } catch (IOException exceptionObj) {
-                        loggerObj.log(Level.INFO, "fetching url " + nextFollowingURL.toString() + " failed with IO error: "
-                                                  + exceptionObj.getMessage() + "; saving for later....");
-                        unfetchedHandlesQueue.add(nextHandleObj);
-                        break;
-                    }
-
-                    if (followingPageInterpreterObj == null) {
-                        break;
-                    }
-
-                    try {
-                        dataStoreObj.storeRelationSet(followingPageInterpreterObj.getRelationSet());
-                        loggerObj.log(Level.INFO, "retrieved " + followingPageInterpreterObj.getRelationSet().size() + " handles from following page "
-                                                  + nextFollowingURL.toString() + "; stored to database");
-                    } catch (SQLException exceptionObj) {
-                        loggerObj.log(Level.SEVERE, "storing following page " + nextFollowingURL.toString() + " failed with SQL error: "
-                                                    + exceptionObj.getMessage());
-                        break;
-                    }
-
-                    if (followingPageInterpreterObj.getPageInterpretationOutcome() == PageInterpreter.FOUND_NO_NEXT_PAGE_URL) {
-                        break;
-                    }
-
-                    nextFollowingURL = followingPageInterpreterObj.getNextPageURL();
-                    loggerObj.log(Level.INFO, "generated following page url for " + nextHandleObj.toHandle() + ": " + nextFollowingURL.toString());
-                }
-            }
-
-            nextFollowersURL = profilePageInterpreterObj.getFollowersPageURL();
-
-            if (nextFollowersURL != null) {
-                loggerObj.log(Level.INFO, "generated followers page url for " + nextHandleObj.toHandle() + ": " + nextFollowersURL.toString());
-
-                while (nextFollowersURL != null) {
-                    try {
-                        loggerObj.log(Level.INFO, "fetching followers page url for " + nextHandleObj.toHandle() + ": " + nextFollowersURL.toString());
-                        followersPageInterpreterObj = fetchAndParseURL(nextFollowersURL, nextHandleObj);
-                    } catch (ProcessingException exceptionObj) {
-                        loggerObj.log(Level.SEVERE, "fetching url " + nextFollowersURL.toString()
-                                                    + " failed with processing error: " + exceptionObj.getMessage());
-                        break;
-                    } catch (IOException exceptionObj) {
-                        loggerObj.log(Level.INFO, "fetching url " + nextFollowersURL.toString() + " failed with IO error: "
-                                                  + exceptionObj.getMessage() + "; saving for later....");
-                        unfetchedHandlesQueue.add(nextHandleObj);
-                        break;
-                    }
-
-                    if (followersPageInterpreterObj == null) {
-                        break;
-                    }
-
-                    try {
-                        dataStoreObj.storeRelationSet(followersPageInterpreterObj.getRelationSet());
-                        loggerObj.log(Level.SEVERE, "retrieved " + followersPageInterpreterObj.getRelationSet().size()
-                                                    + " handles from followers page " + nextFollowersURL.toString()
-                                                    + "; stored to database");
-                    } catch (SQLException exceptionObj) {
-                        loggerObj.log(Level.SEVERE, "storing followers page " + nextFollowersURL.toString()
-                                                    + " failed with SQL error: " + exceptionObj.getMessage());
-                        break;
-                    }
-
-                    if (followersPageInterpreterObj.getPageInterpretationOutcome() == PageInterpreter.FOUND_NO_NEXT_PAGE_URL) {
-                        break;
-                    }
-
-                    nextFollowersURL = followersPageInterpreterObj.getNextPageURL();
-                    loggerObj.log(Level.INFO, "generated followers page url for " + nextHandleObj.toHandle() + ": " + nextFollowersURL.toString());
-                }
-            }
         }
     }
 
@@ -252,11 +167,16 @@ class ScraperRunnable implements Runnable {
 
         mastodonURLString = mastodonURL.toString();
         instanceHost = mastodonURL.getHost();
+
         try {
             responseObj = clientObj.retrieveUrl(mastodonURLString);
         } catch (IllegalArgumentException exceptionObj) {
-            loggerObj.log(Level.INFO, "tried to load page at URL " + mastodonURL.toString()
-                                      + ", got illegal argument exception: " + exceptionObj.getMessage());
+            loggerObj.log(Level.WARNING, "tried to load page at URL " + mastodonURL.toString()
+                                         + ", got illegal argument exception: " + exceptionObj.getMessage());
+            return null;
+        } catch (NullPointerException exceptionObj) {
+            loggerObj.log(Level.WARNING, "tried to load page at URL " + mastodonURL.toString()
+                                         + ", got null pointer exception: " + exceptionObj.getMessage());
             return null;
         }
 
@@ -363,7 +283,7 @@ class ScraperRunnable implements Runnable {
                 }
 
                 instanceObj = getOrPutInstanceWithMap(instanceHost);
-                instanceObj.setInstanceStatus(Instance.MALFUNCTIONING);
+//                instanceObj.setInstanceStatus(Instance.MALFUNCTIONING);
                 loggerObj.log(Level.INFO, "tried to parse page at URL " + responseObj.getRequestURL().toString()
                                           + ", unable to parse");
 

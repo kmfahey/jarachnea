@@ -24,12 +24,13 @@ public final class Client {
         httpClientObj = new HttpClient(httpClientParamsObj);
     }
 
-    public Response retrieveUrl(final String urlString) throws IOException {
+    public Response retrieveUrl(final String urlString) throws IOException, NullPointerException {
         GetMethod getMethodObj;
         Response responseObj;
 
         getMethodObj = new GetMethod(urlString);
         httpClientObj.executeMethod(getMethodObj);
+
         responseObj = new Response(getMethodObj);
 
         return responseObj;

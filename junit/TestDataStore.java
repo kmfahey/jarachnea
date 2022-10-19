@@ -368,7 +368,7 @@ public final class TestDataStore extends TestCase {
 
         dataStoreObj.storeHandle(TEST_HANDLE_WITHOUT_HANDLE_ID);
 
-        handleList = dataStoreObj.retrieveUnfetchedHandles();
+        handleList = dataStoreObj.retrieveUnfetchedHandlesFromHandles();
 
         retrievedHandle = handleList.get(0);
 
@@ -379,7 +379,7 @@ public final class TestDataStore extends TestCase {
 
         dataStoreObj.storeHandle(TEST_HANDLE_WITH_HANDLE_ID);
 
-        handleList = dataStoreObj.retrieveUnfetchedHandles();
+        handleList = dataStoreObj.retrieveUnfetchedHandlesFromHandles();
 
         retrievedHandle = handleList.get(0);
 

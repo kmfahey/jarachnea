@@ -18,6 +18,7 @@ public final class DataStore {
     private static final String[] HANDLES_COLUMNS_WITH_HANDLE_ID = {"handle_id", "username", "instance"};
     private static final String[] HANDLES_COLUMNS_HANDLE_ID = {"handle_id"};
     private static final String[] PROFILES_COLUMNS = {"profile_handle_id", "username", "instance", "considered", "profile_snippet"};
+    private static final String[] RELATIONS_HANDLE_COLUMNS = {"relation_handle_id", "relation_username", "relation_instance"};
     private static final String[] RELATIONS_COLUMNS = {"profile_handle_id", "profile_username", "profile_instance", "relation_handle_id",
                                                        "relation_type", "relation_page_number", "relation_username", "relation_instance"};
 
@@ -57,7 +58,36 @@ public final class DataStore {
         dbConnection = DriverManager.getConnection(mysqlUrlString, username, password);
     }
 
-    public ArrayList<Handle> retrieveUnfetchedHandles() throws SQLException {
+    public ArrayList<Handle> retrieveUnfetchedHandlesFromRelations() throws SQLException {
+        ArrayList<Handle> retrievedHandlesList;
+        PreparedStatement statementObj;
+        ResultSet retrievalResults;
+
+        statementObj = dbConnection.prepareStatement("SELECT DISTINCT relation_handle_id, relation_username, relation_instance FROM relations "
+                                                     + "LEFT JOIN profiles ON relations.relation_handle_id = profiles.profile_handle_id "
+                                                     + "WHERE profiles.profile_handle_id IS NULL;", RELATIONS_HANDLE_COLUMNS);
+
+        retrievalResults = statementObj.executeQuery();
+
+        retrievedHandlesList = new ArrayList<Handle>();
+
+        while (retrievalResults.next()) {
+            String handleId;
+            String usernameString;
+            String instanceString;
+            Handle handleObj;
+
+            handleId = retrievalResults.getString("relation_handle_id");
+            usernameString = retrievalResults.getString("relation_username");
+            instanceString = retrievalResults.getString("relation_instance");
+            handleObj = new Handle(Integer.valueOf(handleId), usernameString, instanceString);
+
+            retrievedHandlesList.add(handleObj);
+        }
+
+        return retrievedHandlesList;
+    }
+    public ArrayList<Handle> retrieveUnfetchedHandlesFromHandles() throws SQLException {
         ArrayList<Handle> retrievedHandlesList;
         PreparedStatement statementObj;
         ResultSet retrievalResults;
