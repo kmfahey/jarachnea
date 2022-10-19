@@ -128,7 +128,7 @@ class ScraperLoop {
                 processingRateAverage = processingRateTotal / ((float) processingRateHistory.size());
 
                 if (processingRateHistory.size() > 1) {
-                    loggerObj.log(Level.INFO, "completed " + ((int) processingRate) + " records in the past minute; "
+                    loggerObj.log(Level.INFO, "completed " + ((int) processingRate) + " records in the past minute;"
                                               + " average rate over the last " + processingRateHistory.size()
                                               + " minutes is " + String.format("%.3f", processingRateAverage)
                                               + " records per minute");
