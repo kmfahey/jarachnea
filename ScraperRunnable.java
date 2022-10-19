@@ -77,12 +77,29 @@ class ScraperRunnable implements Runnable {
             instanceObj = getOrPutInstanceWithMap(nextHandleObj.getInstance());
 
             if (instanceObj.getInstanceStatus() > 0) {
-                loggerObj.log(Level.INFO, "Instance " + instanceObj.getInstanceHostname() + " has "
+                loggerObj.log(Level.INFO, "instance " + instanceObj.getInstanceHostname() + " has "
                                           + instanceObj.getInstanceStatusString().toLowerCase() + " status, skipping....");
+
+                try {
+                    profileObj = new Profile(nextHandleObj, true, "");
+                } catch (MalformedURLException exceptionObj) {
+                    loggerObj.log(Level.SEVERE, "instantiating profile from " + nextHandleObj.toHandle() + " failed with malformed url error: "
+                                                + exceptionObj.getMessage());
+                    continue;
+                }
+
+                try {
+                    dataStoreObj.storeProfile(profileObj);
+                    loggerObj.log(Level.INFO, "stored handle " + profileObj.getProfileHandle().toHandle() + " null bio in database");
+                } catch (SQLException exceptionObj) {
+                    loggerObj.log(Level.SEVERE, "storing profile " + profileObj.getProfileHandle().toHandle() + " bio to database"
+                                                + " failed with SQL error: " + exceptionObj.getMessage());
+                }
+
                 continue;
             } else if (!instanceObj.rateLimitExpiredYet()) {
                 rateLimitSecondsLeft = instanceObj.rateLimitRemainingSeconds();
-                loggerObj.log(Level.INFO, "Instance access has been rate-limited, " + rateLimitSecondsLeft
+                loggerObj.log(Level.INFO, "instance access has been rate-limited, " + rateLimitSecondsLeft
                                           + " seconds remaining, saving for later....");
 
                 unfetchedHandlesQueue.add(nextHandleObj);
@@ -128,9 +145,9 @@ class ScraperRunnable implements Runnable {
 
                 try {
                     dataStoreObj.storeProfile(profileObj);
-                    loggerObj.log(Level.INFO, "stored handle " + profileObj.getProfileHandle() + " bio, length " + profileBioStr.length() + " in database");
+                    loggerObj.log(Level.INFO, "stored handle " + profileObj.getProfileHandle().toHandle() + " bio, length " + profileBioStr.length() + " in database");
                 } catch (SQLException exceptionObj) {
-                    loggerObj.log(Level.INFO, "storinghandle " + profileObj.getProfileHandle() + " bio to database failed with SQL error: "
+                    loggerObj.log(Level.INFO, "storinghandle " + profileObj.getProfileHandle().toHandle() + " bio to database failed with SQL error: "
                                               + exceptionObj.getMessage());
                 }
             }
@@ -226,9 +243,10 @@ class ScraperRunnable implements Runnable {
 
     private PageInterpreter fetchAndParseURL(final URL mastodonURL, final Handle nextHandleObj) throws ProcessingException, IOException {
         PageInterpreter pageInterpreterObj;
-        String mastodonURLString;
-        String instanceHost;
+        Profile profileObj;
         Response responseObj;
+        String instanceHost;
+        String mastodonURLString;
         int statusCode;
         int parsingOutcomeFlag;
 
@@ -262,13 +280,28 @@ class ScraperRunnable implements Runnable {
             loggerObj.log(Level.INFO, "tried to load page at URL " + responseObj.getRequestURL().toString()
                                       + ", got status code " + statusCode);
 
+            try {
+                profileObj = new Profile(nextHandleObj, true, "");
+            } catch (MalformedURLException exceptionObj) {
+                loggerObj.log(Level.SEVERE, "instantiating profile from " + nextHandleObj.toHandle() + " failed with malformed url error: "
+                                            + exceptionObj.getMessage());
+                return null;
+            }
+
+            try {
+                dataStoreObj.storeProfile(profileObj);
+                loggerObj.log(Level.INFO, "stored handle " + profileObj.getProfileHandle().toHandle() + " null bio in database");
+            } catch (SQLException exceptionObj) {
+                loggerObj.log(Level.SEVERE, "storing profile " + profileObj.getProfileHandle().toHandle() + " bio to database"
+                                            + " failed with SQL error: " + exceptionObj.getMessage());
+            }
+
             if ((statusCode >= 500 && statusCode < 600) || statusCode == 400 || statusCode == 401 || statusCode == 403 || statusCode == 406) {
-                loggerObj.log(Level.INFO, "instance " + nextHandleObj.getInstance() + " is malfunctioning");
-
                 Instance instanceObj;
-
-                instanceObj = getOrPutInstanceWithMap(instanceHost);
-                instanceObj.setInstanceStatus(Instance.MALFUNCTIONING);
+                loggerObj.log(Level.INFO, "instance " + nextHandleObj.getInstance() + " is malfunctioning");
+//
+//                instanceObj = getOrPutInstanceWithMap(instanceHost);
+//                instanceObj.setInstanceStatus(Instance.MALFUNCTIONING);
 //                try {
 //                    dataStoreObj.storeInstance(instanceObj);
 //                    loggerObj.log(Level.INFO, "stored instance " + instanceObj.getInstanceHostname() +
@@ -313,6 +346,22 @@ class ScraperRunnable implements Runnable {
                 || parsingOutcomeFlag == PageInterpreter.PAGE_BIO_UNPARSEABLE) {
                 Instance instanceObj;
 
+                try {
+                    profileObj = new Profile(nextHandleObj, true, "");
+                } catch (MalformedURLException exceptionObj) {
+                    loggerObj.log(Level.SEVERE, "instantiating profile from " + nextHandleObj.toHandle() + " failed with malformed url error: "
+                                                + exceptionObj.getMessage());
+                    return null;
+                }
+
+                try {
+                    dataStoreObj.storeProfile(profileObj);
+                    loggerObj.log(Level.INFO, "stored handle " + profileObj.getProfileHandle().toHandle() + " null bio in database");
+                } catch (SQLException exceptionObj) {
+                    loggerObj.log(Level.SEVERE, "storing profile " + profileObj.getProfileHandle().toHandle() + " bio to database"
+                                                + " failed with SQL error: " + exceptionObj.getMessage());
+                }
+
                 instanceObj = getOrPutInstanceWithMap(instanceHost);
                 instanceObj.setInstanceStatus(Instance.MALFUNCTIONING);
                 loggerObj.log(Level.INFO, "tried to parse page at URL " + responseObj.getRequestURL().toString()
@@ -330,6 +379,22 @@ class ScraperRunnable implements Runnable {
             } else if (parsingOutcomeFlag == PageInterpreter.PAGE_IS_FORWARDING_PAGE) {
                 Handle forwardingHandle;
 
+                try {
+                    profileObj = new Profile(nextHandleObj, true, "");
+                } catch (MalformedURLException exceptionObj) {
+                    loggerObj.log(Level.SEVERE, "instantiating profile from " + nextHandleObj.toHandle() + " failed with malformed url error: "
+                                                + exceptionObj.getMessage());
+                    return null;
+                }
+
+                try {
+                    dataStoreObj.storeProfile(profileObj);
+                    loggerObj.log(Level.INFO, "stored handle " + profileObj.getProfileHandle().toHandle() + " null bio in database");
+                } catch (SQLException exceptionObj) {
+                    loggerObj.log(Level.SEVERE, "storing profile " + profileObj.getProfileHandle().toHandle() + " bio to database"
+                                                + " failed with SQL error: " + exceptionObj.getMessage());
+                }
+
                 loggerObj.log(Level.INFO, "page at URL " + responseObj.getRequestURL().toString()
                                           + " is a forwarding page");
                 forwardingHandle = pageInterpreterObj.getForwardingAddressHandle();
@@ -344,9 +409,13 @@ class ScraperRunnable implements Runnable {
                 unfetchedHandlesQueue.add(forwardingHandle);
                 loggerObj.log(Level.INFO, "stored new handle " + forwardingHandle.toHandle() + " in database");
             } else if (parsingOutcomeFlag == PageInterpreter.PAGE_HAS_NO_POSTS || parsingOutcomeFlag == PageInterpreter.PAGE_POSTS_OUT_OF_DATE) {
-                Profile profileObj;
-
-                profileObj = new Profile(pageInterpreterObj.getUserHandle(), true, "");
+                try {
+                    profileObj = new Profile(nextHandleObj, true, "");
+                } catch (MalformedURLException exceptionObj) {
+                    loggerObj.log(Level.SEVERE, "instantiating profile from " + nextHandleObj.toHandle() + " failed with malformed url error: "
+                                                + exceptionObj.getMessage());
+                    return null;
+                }
 
                 if (parsingOutcomeFlag == PageInterpreter.PAGE_HAS_NO_POSTS) {
                     loggerObj.log(Level.INFO, "page at URL " + responseObj.getRequestURL().toString()
@@ -358,9 +427,9 @@ class ScraperRunnable implements Runnable {
 
                 try {
                     dataStoreObj.storeProfile(profileObj);
-                    loggerObj.log(Level.INFO, "stored handle " + profileObj.getProfileHandle() + " null bio in database");
+                    loggerObj.log(Level.INFO, "stored handle " + profileObj.getProfileHandle().toHandle() + " null bio in database");
                 } catch (SQLException exceptionObj) {
-                    loggerObj.log(Level.SEVERE, "storing profile " + profileObj.getProfileHandle() + " bio to database"
+                    loggerObj.log(Level.SEVERE, "storing profile " + profileObj.getProfileHandle().toHandle() + " bio to database"
                                                 + " failed with SQL error: " + exceptionObj.getMessage());
                 }
             } else if (parsingOutcomeFlag != PageInterpreter.FOUND_PAGE_BIO
