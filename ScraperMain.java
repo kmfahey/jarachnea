@@ -42,10 +42,11 @@ public class ScraperMain {
         CommandLine commandLineObj;
 
         optionsObj = new Options();
+        optionsObj.addOption("H", false, "when fetching profiles, load unfetched handles from the `handles` table");
+        optionsObj.addOption("R", false, "when fetching profiles, load unfetched handles from the `relations` table");
         optionsObj.addOption("p", false, "fetch profiles only, disregard following & followers pages");
+        optionsObj.addOption("q", false, "fetch following & followers pages only, disregard profiles");
         optionsObj.addOption("r", false, "fetch both profiles and relations");
-        optionsObj.addOption("H", false, "load unfetched handles from the `handles` table");
-        optionsObj.addOption("R", false, "load unfetched handles from the `relations` table");
         commandLineParserObj = new DefaultParser();
 
         try {
@@ -56,13 +57,22 @@ public class ScraperMain {
             return;
         }
 
-        if (!commandLineObj.hasOption("p") && !commandLineObj.hasOption("r")) {
-            System.out.println("please specify one of either the -p flag or the -r flag on the commandline to choose the scraping mode");
+        if (!commandLineObj.hasOption("p") && !commandLineObj.hasOption("q") && !commandLineObj.hasOption("r")) {
+            System.out.println("please specify one of either -p, -q or -r on the commandline to choose the scraping mode");
             System.exit(0);
+        } else if ((commandLineObj.hasOption("p") && commandLineObj.hasOption("q"))
+            || (commandLineObj.hasOption("p") && commandLineObj.hasOption("r"))
+            || (commandLineObj.hasOption("q") && commandLineObj.hasOption("r"))) {
+            System.out.println("more than just one of -p, -q and -r specified on the commandline; please supply only one");
         }
 
-        if (!commandLineObj.hasOption("H") && !commandLineObj.hasOption("R")) {
-            System.out.println("please specify one of either the -H flag or the -R flag on the commandline to indicate where to load pending handles from");
+        if (commandLineObj.hasOption("p") || commandLineObj.hasOption("r")) {
+            System.out.println("if -p or -r is specified, please specify one of either -H or -R on the commandline to indicate "
+                               + "where to load pending handles from");
+            System.exit(0);
+        } else if (commandLineObj.hasOption("H") && commandLineObj.hasOption("R")) {
+            System.out.println("with -p or -r specified, please specify only one of -H or -R on the commandline to indicate "
+                               + "where to load pending handles from");
             System.exit(0);
         }
 
@@ -78,8 +88,10 @@ public class ScraperMain {
 
         if (commandLineObj.hasOption("p")) {
             loggerObj.log(Level.INFO, "received -p flag on the commandline, executing Profiles-only mode");
+        } else if (commandLineObj.hasOption("q")) {
+            loggerObj.log(Level.INFO, "received -q flag on the commandline, executing Relations mode");
         } else {
-            loggerObj.log(Level.INFO, "received no -p flag on the commandline, executing Profiles + Relations mode");
+            loggerObj.log(Level.INFO, "received -r flag on the commandline, executing Profiles + Relations mode");
         }
 
         host = iniObj.get("Production").get("host");
@@ -92,10 +104,14 @@ public class ScraperMain {
         instanceMap = new ConcurrentHashMap<String, Instance>(dataStoreObj.retrieveBadInstances());
         loggerObj.log(Level.INFO, "loaded bad instances list, " + instanceMap.size() + " entries");
 
-        if (commandLineObj.hasOption("H")) {
-            unfetchedHandlesQueue = new ConcurrentLinkedQueue<Handle>(dataStoreObj.retrieveUnfetchedHandlesFromRelations());
+        if (commandLineObj.hasOption("p") || commandLineObj.hasOption("r")) {
+            if (commandLineObj.hasOption("H")) {
+                unfetchedHandlesQueue = new ConcurrentLinkedQueue<Handle>(dataStoreObj.retrieveUnfetchedHandlesFromRelationsVsProfiles());
+            } else {
+                unfetchedHandlesQueue = new ConcurrentLinkedQueue<Handle>(dataStoreObj.retrieveUnfetchedHandlesFromHandlesVsProfiles());
+            }
         } else {
-            unfetchedHandlesQueue = new ConcurrentLinkedQueue<Handle>(dataStoreObj.retrieveUnfetchedHandlesFromHandles());
+            unfetchedHandlesQueue = new ConcurrentLinkedQueue<Handle>(dataStoreObj.retrieveUnfetchedHandlesFromProfilesVsRelations());
         }
 
         loggerObj.log(Level.INFO, "loaded unfetched handles list, " + unfetchedHandlesQueue.size() + " entries");
@@ -103,9 +119,11 @@ public class ScraperMain {
         scraperLoopObj = new ScraperLoop(instanceMap, unfetchedHandlesQueue, host, username, password, database);
 
         if (commandLineObj.hasOption("p")) {
-            scraperLoopObj.executeMainLoop(false);
+            scraperLoopObj.executeMainLoop(true, false);
+        } else if (commandLineObj.hasOption("q")) {
+            scraperLoopObj.executeMainLoop(false, true);
         } else {
-            scraperLoopObj.executeMainLoop(true);
+            scraperLoopObj.executeMainLoop(true, true);
         }
     }
 }

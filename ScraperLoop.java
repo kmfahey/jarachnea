@@ -54,7 +54,7 @@ class ScraperLoop {
         unfetchedHandlesQueue = unfetchedHandlesQueueObj;
     }
 
-    public void executeMainLoop(final boolean saveRelations) {
+    public void executeMainLoop(final boolean saveProfiles, final boolean saveRelations) {
         ArrayList<Float> processingRateHistory;
         GregorianCalendar calendarObj;
         PageInterpreter profilePageInterpreterObj;
@@ -67,6 +67,7 @@ class ScraperLoop {
         float projectedHoursRemaining;
         float projectedMinutesRemaining;
         float processingRateAverage;
+        float processingGoal;
 
         processingRateHistory = new ArrayList<Float>();
         calendarObj = new GregorianCalendar();
@@ -88,22 +89,26 @@ class ScraperLoop {
 
             instanceObj = getOrPutInstanceWithMap(nextHandleObj.getInstance());
 
-            profileURL = handleInstancePreprocessing(instanceObj, nextHandleObj);
+            profileURL = handleInstancePreprocessing(instanceObj, nextHandleObj, saveProfiles);
 
             if (profileURL == null) {
                 continue;
             }
 
-            profilePageInterpreterObj = handleProcessingProfile(profileURL, nextHandleObj);
+            profilePageInterpreterObj = handleProcessingProfile(profileURL, nextHandleObj, saveProfiles);
+
+            if (profilePageInterpreterObj == null) {
+                continue;
+            }
 
             if (saveRelations) {
                 nextFollowingURL = profilePageInterpreterObj.getFollowingPageURL();
 
-                processRelations(nextFollowingURL, "following", nextHandleObj);
+                processRelations(nextFollowingURL, "following", nextHandleObj, saveProfiles);
 
                 nextFollowersURL = profilePageInterpreterObj.getFollowersPageURL();
 
-                processRelations(nextFollowersURL, "followers", nextHandleObj);
+                processRelations(nextFollowersURL, "followers", nextHandleObj, saveProfiles);
             }
 
             calendarObj = new GregorianCalendar();
@@ -136,44 +141,55 @@ class ScraperLoop {
                     loggerObj.log(Level.INFO, "completed " + processingRate + " records in the past minute");
                 }
 
-                projectedMinutesRemaining = mostRecentHandlesQty / processingRateAverage;
+                if (mostRecentHandlesQty + processingRateTotal > 100000) {
+                    processingGoal = 100000.0F - processingRateTotal;
+                } else {
+                    processingGoal = mostRecentHandlesQty;
+                }
+
+                projectedMinutesRemaining = processingGoal / processingRateAverage;
 
                 if (projectedMinutesRemaining > 60) {
                     projectedHoursRemaining = projectedMinutesRemaining / 60.0F;
                     projectedMinutesRemaining = projectedMinutesRemaining % 60.0F;
-                    loggerObj.log(Level.INFO, ((int) mostRecentHandlesQty) + " records remaining; projected time until completion "
+                    loggerObj.log(Level.INFO, ((int) processingGoal) + " records remaining; projected time until completion "
                                   + ((int) projectedHoursRemaining) + "h" + ((int) projectedMinutesRemaining) + "m");
                 } else {
-                    loggerObj.log(Level.INFO, mostRecentHandlesQty + " records remaining; projected time until completion "
+                    loggerObj.log(Level.INFO, ((int) processingGoal) + " records remaining; projected time until completion "
                                   + ((int) projectedMinutesRemaining) + "min");
                 }
             }
         }
     }
 
-    private final URL handleInstancePreprocessing(final Instance instanceObj, final Handle nextHandleObj) {
+    private final URL handleInstancePreprocessing(final Instance instanceObj, final Handle nextHandleObj, final boolean saveProfiles) {
         Profile profileObj;
         URL profileURL;
         float rateLimitSecondsLeft;
 
         if (instanceObj.getInstanceStatus() > 0) {
-            loggerObj.log(Level.INFO, "instance " + instanceObj.getInstanceHostname() + " has "
-                                      + instanceObj.getInstanceStatusString().toLowerCase() + " status, storing null bio to database");
+            if (!saveProfiles) {
+                loggerObj.log(Level.INFO, "instance " + instanceObj.getInstanceHostname() + " has "
+                                          + instanceObj.getInstanceStatusString().toLowerCase() + " status");
+            } else {
+                loggerObj.log(Level.INFO, "instance " + instanceObj.getInstanceHostname() + " has "
+                                          + instanceObj.getInstanceStatusString().toLowerCase() + " status; storing null bio to database");
 
-            try {
-                profileObj = new Profile(nextHandleObj, true, "");
-            } catch (MalformedURLException exceptionObj) {
-                loggerObj.log(Level.WARNING, "instantiating profile from " + nextHandleObj.toHandle() + " failed with malformed url error: "
-                                            + exceptionObj.getMessage());
-                return null;
-            }
+                try {
+                    profileObj = new Profile(nextHandleObj, true, "");
+                } catch (MalformedURLException exceptionObj) {
+                    loggerObj.log(Level.WARNING, "instantiating profile from " + nextHandleObj.toHandle() + " failed with malformed url error: "
+                                                + exceptionObj.getMessage());
+                    return null;
+                }
 
-            try {
-                dataStoreObj.storeProfile(profileObj);
-                loggerObj.log(Level.INFO, "stored profile " + nextHandleObj.toHandle() + " null bio in database");
-            } catch (SQLException exceptionObj) {
-                loggerObj.log(Level.WARNING, "storing profile " + nextHandleObj.toHandle() + " null bio to database"
-                                            + " failed with SQL error: " + exceptionObj.getMessage());
+                try {
+                    dataStoreObj.storeProfile(profileObj);
+                    loggerObj.log(Level.INFO, "stored profile " + nextHandleObj.toHandle() + " null bio in database");
+                } catch (SQLException exceptionObj) {
+                    loggerObj.log(Level.WARNING, "storing profile " + nextHandleObj.toHandle() + " null bio to database"
+                                                + " failed with SQL error: " + exceptionObj.getMessage());
+                }
             }
 
             return null;
@@ -199,27 +215,32 @@ class ScraperLoop {
         return profileURL;
     }
             
-    private final PageInterpreter handleProcessingProfile(final URL profileURL, final Handle nextHandleObj) {
+    private final PageInterpreter handleProcessingProfile(final URL profileURL, final Handle nextHandleObj, final boolean saveProfiles) {
         PageInterpreter profilePageInterpreterObj;
         Profile profileObj;
         String profileBioStr;
 
         try {
             loggerObj.log(Level.INFO, "fetching profile page url for " + nextHandleObj.toHandle() + ": " + profileURL.toString());
-            profilePageInterpreterObj = fetchAndParseURL(profileURL, nextHandleObj);
+            profilePageInterpreterObj = fetchAndParseURL(profileURL, nextHandleObj, saveProfiles);
         } catch (ProcessingException exceptionObj) {
             loggerObj.log(Level.WARNING, "fetching url " + profileURL + " failed with processing error: " + exceptionObj.getMessage());
             return null;
         } catch (IOException exceptionObj) {
-            loggerObj.log(Level.WARNING, "fetching url " + profileURL + " failed with IO error: " + exceptionObj.getMessage() + "; saving null bio to database");
-//            unfetchedHandlesQueue.add(nextHandleObj);
+            if (!saveProfiles) {
+                loggerObj.log(Level.WARNING, "fetching url " + profileURL + " failed with IO error: " + exceptionObj.getMessage());
+            } else {
+                loggerObj.log(Level.WARNING, "fetching url " + profileURL + " failed with IO error: " + exceptionObj.getMessage()
+                                             + "; saving null bio to database");
+    //            unfetchedHandlesQueue.add(nextHandleObj);
 
-            try {
-                profileObj = new Profile(nextHandleObj, true, "");
-            } catch (MalformedURLException newExceptionObj) {
-                loggerObj.log(Level.WARNING, "instantiating profile from " + nextHandleObj.toHandle() + " failed with malformed url error: "
-                                            + newExceptionObj.getMessage());
-                return null;
+                try {
+                    profileObj = new Profile(nextHandleObj, true, "");
+                } catch (MalformedURLException newExceptionObj) {
+                    loggerObj.log(Level.WARNING, "instantiating profile from " + nextHandleObj.toHandle() + " failed with malformed url error: "
+                                                + newExceptionObj.getMessage());
+                    return null;
+                }
             }
 
             return null;
@@ -230,32 +251,36 @@ class ScraperLoop {
             return null;
         }
 
-        profileBioStr = profilePageInterpreterObj.getProfileBio();
+        if (!saveProfiles) {
+            profileBioStr = profilePageInterpreterObj.getProfileBio();
 
-        if (profileBioStr != null) {
-            loggerObj.log(Level.INFO, "at URL " + profileURL.toString() + " found profile bio, length " + profileBioStr.length() + " chars");
+            if (profileBioStr != null) {
+                loggerObj.log(Level.INFO, "at URL " + profileURL.toString() + " found profile bio, length " + profileBioStr.length() + " chars");
 
-            try {
-                profileObj = new Profile(profilePageInterpreterObj.getUserHandle(), false, profileBioStr);
-            } catch (MalformedURLException exceptionObj) {
-                loggerObj.log(Level.WARNING, "instantiating profile from " + profileURL + " failed with malformed url error: "
-                                            + exceptionObj.getMessage());
-                return null;
-            }
+                try {
+                    profileObj = new Profile(profilePageInterpreterObj.getUserHandle(), false, profileBioStr);
+                } catch (MalformedURLException exceptionObj) {
+                    loggerObj.log(Level.WARNING, "instantiating profile from " + profileURL + " failed with malformed url error: "
+                                                + exceptionObj.getMessage());
+                    return null;
+                }
 
-            try {
-                dataStoreObj.storeProfile(profileObj);
-                loggerObj.log(Level.INFO, "stored handle " + nextHandleObj.toHandle() + " bio, length " + profileBioStr.length() + " in database");
-            } catch (SQLException exceptionObj) {
-                loggerObj.log(Level.WARNING, "storinghandle " + nextHandleObj.toHandle() + " bio to database failed with SQL error: "
-                                          + exceptionObj.getMessage());
+                try {
+                    dataStoreObj.storeProfile(profileObj);
+                    loggerObj.log(Level.INFO, "stored handle " + nextHandleObj.toHandle() + " bio, length " + profileBioStr.length()
+                                              + " in database");
+                } catch (SQLException exceptionObj) {
+                    loggerObj.log(Level.WARNING, "storinghandle " + nextHandleObj.toHandle() + " bio to database failed with SQL error: "
+                                              + exceptionObj.getMessage());
+                }
             }
         }
 
         return profilePageInterpreterObj;
     }
 
-    private final void processRelations(final URL nextRelationsURLObj, final String relationsStr, final Handle nextHandleObj) {
+    private final void processRelations(final URL nextRelationsURLObj, final String relationsStr, final Handle nextHandleObj,
+                                        final boolean saveProfiles) {
         PageInterpreter relationsPageInterpreterObj;
         URL nextRelationsURL;
         Profile profileObj;
@@ -267,23 +292,30 @@ class ScraperLoop {
 
             while (nextRelationsURL != null) {
                 try {
-                    loggerObj.log(Level.INFO, "fetching " + relationsStr + " page url for " + nextHandleObj.toHandle() + ": " + nextRelationsURL.toString());
-                    relationsPageInterpreterObj = fetchAndParseURL(nextRelationsURL, nextHandleObj);
+                    loggerObj.log(Level.INFO, "fetching " + relationsStr + " page url for " + nextHandleObj.toHandle() + ": "
+                                              + nextRelationsURL.toString());
+                    relationsPageInterpreterObj = fetchAndParseURL(nextRelationsURL, nextHandleObj, saveProfiles);
                 } catch (ProcessingException exceptionObj) {
                     loggerObj.log(Level.WARNING, "fetching url " + nextRelationsURL.toString()
                                                 + " failed with processing error: " + exceptionObj.getMessage());
                     return;
                 } catch (IOException exceptionObj) {
-                    loggerObj.log(Level.WARNING, "fetching url " + nextRelationsURL.toString() + " failed with IO error: "
-                                              + exceptionObj.getMessage() + "; saving null bio to database");
-//                    unfetchedHandlesQueue.add(nextHandleObj);
+                    if (!saveProfiles) {
+                        loggerObj.log(Level.WARNING, "fetching url " + nextRelationsURL.toString() + " failed with IO error: "
+                                                  + exceptionObj.getMessage());
+                    } else {
+                        loggerObj.log(Level.WARNING, "fetching url " + nextRelationsURL.toString() + " failed with IO error: "
+                                                  + exceptionObj.getMessage() + "; saving null bio to database");
+    //                    unfetchedHandlesQueue.add(nextHandleObj);
 
-                    try {
-                        profileObj = new Profile(nextHandleObj, true, "");
-                    } catch (MalformedURLException newExceptionObj) {
-                        loggerObj.log(Level.WARNING, "instantiating profile from " + nextHandleObj.toHandle() + " failed with malformed url error: "
-                                                    + newExceptionObj.getMessage());
-                        return;
+                        try {
+                            profileObj = new Profile(nextHandleObj, true, "");
+                        } catch (MalformedURLException newExceptionObj) {
+                            loggerObj.log(Level.WARNING, "instantiating profile from " + nextHandleObj.toHandle()
+                                                         + " failed with malformed url error: "
+                                                        + newExceptionObj.getMessage());
+                            return;
+                        }
                     }
 
                     return;
@@ -309,12 +341,14 @@ class ScraperLoop {
                 }
 
                 nextRelationsURL = relationsPageInterpreterObj.getNextPageURL();
-                loggerObj.log(Level.INFO, "generated " + relationsStr + " page url for " + nextHandleObj.toHandle() + ": " + nextRelationsURL.toString());
+                loggerObj.log(Level.INFO, "generated " + relationsStr + " page url for " + nextHandleObj.toHandle() + ": "
+                                          + nextRelationsURL.toString());
             }
         }
     }
 
-    private PageInterpreter fetchAndParseURL(final URL mastodonURL, final Handle nextHandleObj) throws ProcessingException, IOException {
+    private PageInterpreter fetchAndParseURL(final URL mastodonURL, final Handle nextHandleObj,
+                                             final boolean saveProfiles) throws ProcessingException, IOException {
         Response responseObj;
         String instanceHost;
         String mastodonURLString;
@@ -340,10 +374,10 @@ class ScraperLoop {
             handleStatusCode429(responseObj, nextHandleObj, statusCode);
             return null;
         } else if (statusCode != 200) {
-            handleStatusCodesIn400sOr500s(responseObj, nextHandleObj, statusCode);
+            handleStatusCodesIn400sOr500s(responseObj, nextHandleObj, statusCode, saveProfiles);
             return null;
         } else {
-            return handleStatusCode200(responseObj, nextHandleObj, mastodonURLString);
+            return handleStatusCode200(responseObj, nextHandleObj, mastodonURLString, saveProfiles);
         }
     }
 
@@ -363,7 +397,8 @@ class ScraperLoop {
         loggerObj.log(Level.INFO, "scraper is rate-limited, " + rateLimitSeconds + " seconds remaining");
     }
 
-    private final void handleStatusCodesIn400sOr500s(final Response responseObj, final Handle nextHandleObj, final int statusCode) {
+    private final void handleStatusCodesIn400sOr500s(final Response responseObj, final Handle nextHandleObj, final int statusCode,
+                                                     final boolean saveProfiles) {
         Instance instanceObj;
         Profile profileObj;
 
@@ -379,7 +414,12 @@ class ScraperLoop {
         }
 
         if ((statusCode >= 500 && statusCode < 600) || statusCode == 400 || statusCode == 401 || statusCode == 403 || statusCode == 406) {
-            loggerObj.log(Level.INFO, "got status code " + statusCode + "; instance " + nextHandleObj.getInstance() + " is malfunctioning; storing null bio to database");
+            if (!saveProfiles) {
+                loggerObj.log(Level.INFO, "got status code " + statusCode + "; instance " + nextHandleObj.getInstance() + " is malfunctioning");
+            } else {
+                loggerObj.log(Level.INFO, "got status code " + statusCode + "; instance " + nextHandleObj.getInstance() + " is malfunctioning; "
+                                          + "storing null bio to database");
+            }
 //            instanceObj = getOrPutInstanceWithMap(instanceHost);
 //            instanceObj.setInstanceStatus(Instance.MALFUNCTIONING);
 //            try {
@@ -391,21 +431,32 @@ class ScraperLoop {
 //                                            + " failed with SQL error: " + exceptionObj.getMessage());
 //            }
         } else if (statusCode == 404 || statusCode == 410) {
-            loggerObj.log(Level.INFO, "user " + nextHandleObj.toHandle() + " has been deleted from instance; storing null bio to database");
+            if (!saveProfiles) {
+                loggerObj.log(Level.INFO, "user " + nextHandleObj.toHandle() + " has been deleted from instance");
+            } else {
+                loggerObj.log(Level.INFO, "user " + nextHandleObj.toHandle() + " has been deleted from instance; storing null bio to database");
+            }
         } else {
-            loggerObj.log(Level.INFO, "unrecognized status code" + statusCode + "; storing null bio to database");
+            if (!saveProfiles) {
+                loggerObj.log(Level.INFO, "unrecognized status code" + statusCode + "");
+            } else {
+                loggerObj.log(Level.INFO, "unrecognized status code" + statusCode + "; storing null bio to database");
+            }
         }
 
-        try {
-            dataStoreObj.storeProfile(profileObj);
-            loggerObj.log(Level.INFO, "stored profile " + nextHandleObj.toHandle() + " null bio in database");
-        } catch (SQLException exceptionObj) {
-            loggerObj.log(Level.WARNING, "storing profile " + nextHandleObj.toHandle() + " null bio to database"
-                                        + " failed with SQL error: " + exceptionObj.getMessage());
+        if (saveProfiles) {
+            try {
+                dataStoreObj.storeProfile(profileObj);
+                loggerObj.log(Level.INFO, "stored profile " + nextHandleObj.toHandle() + " null bio in database");
+            } catch (SQLException exceptionObj) {
+                loggerObj.log(Level.WARNING, "storing profile " + nextHandleObj.toHandle() + " null bio to database"
+                                            + " failed with SQL error: " + exceptionObj.getMessage());
+            }
         }
     }
 
-    private final PageInterpreter handleStatusCode200(Response responseObj, Handle nextHandleObj, String mastodonURLString) throws ProcessingException, MalformedURLException {
+    private final PageInterpreter handleStatusCode200(final Response responseObj, final Handle nextHandleObj, final String mastodonURLString,
+                                                      final boolean saveProfiles) throws ProcessingException, MalformedURLException {
         PageInterpreter pageInterpreterObj;
         int pageTypeFlag;
         int parsingOutcomeFlag;
@@ -433,15 +484,15 @@ class ScraperLoop {
         if (parsingOutcomeFlag == PageInterpreter.PAGE_TIMES_UNPARSEABLE
             || parsingOutcomeFlag == PageInterpreter.PAGE_FORWARDING_UNPARSEABLE
             || parsingOutcomeFlag == PageInterpreter.PAGE_BIO_UNPARSEABLE) {
-            if (!handleProfileIsUnparseable(responseObj, nextHandleObj, parsingOutcomeFlag)) {
+            if (!handleProfileIsUnparseable(responseObj, nextHandleObj, parsingOutcomeFlag, saveProfiles)) {
                 return null;
             }
         } else if (parsingOutcomeFlag == PageInterpreter.PAGE_IS_FORWARDING_PAGE) {
-            if (!handleForwardingPageProfile(pageInterpreterObj, responseObj, nextHandleObj)) {
+            if (!handleForwardingPageProfile(pageInterpreterObj, responseObj, nextHandleObj, saveProfiles)) {
                 return null;
             }
         } else if (parsingOutcomeFlag == PageInterpreter.PAGE_HAS_NO_POSTS || parsingOutcomeFlag == PageInterpreter.PAGE_POSTS_OUT_OF_DATE) {
-            if (!handleProfileWithNoOrOldPosts(responseObj, nextHandleObj, parsingOutcomeFlag)) {
+            if (!handleProfileWithNoOrOldPosts(responseObj, nextHandleObj, parsingOutcomeFlag, saveProfiles)) {
                 return null;
             }
         } else if (parsingOutcomeFlag != PageInterpreter.FOUND_PAGE_BIO
@@ -453,21 +504,37 @@ class ScraperLoop {
         return pageInterpreterObj;
     }
 
-    private final boolean handleProfileIsUnparseable(final Response responseObj, final Handle nextHandleObj, int parsingOutcomeFlag) throws ProcessingException {
+    private final boolean handleProfileIsUnparseable(final Response responseObj, final Handle nextHandleObj, final int parsingOutcomeFlag,
+                                                     final boolean saveProfiles) throws ProcessingException {
         Profile profileObj;
         Instance instanceObj;
 
         try {
             profileObj = new Profile(nextHandleObj, true, "");
             if (parsingOutcomeFlag == PageInterpreter.PAGE_TIMES_UNPARSEABLE) {
-                loggerObj.log(Level.WARNING, "profile for " + nextHandleObj.toHandle()
-                                            + " has unparseable page times, storing null bio to database");
+                if (!saveProfiles) {
+                    loggerObj.log(Level.WARNING, "profile for " + nextHandleObj.toHandle()
+                                                + " has unparseable page times");
+                } else {
+                    loggerObj.log(Level.WARNING, "profile for " + nextHandleObj.toHandle()
+                                                + " has unparseable page times; storing null bio to database");
+                }
             } else if (parsingOutcomeFlag == PageInterpreter.PAGE_FORWARDING_UNPARSEABLE) {
-                loggerObj.log(Level.WARNING, "profile for " + nextHandleObj.toHandle()
-                                            + " has unparseable forwarding address, storing null bio to database");
+                if (!saveProfiles) {
+                    loggerObj.log(Level.WARNING, "profile for " + nextHandleObj.toHandle()
+                                                + " has unparseable forwarding address");
+                } else {
+                    loggerObj.log(Level.WARNING, "profile for " + nextHandleObj.toHandle()
+                                                + " has unparseable forwarding address; storing null bio to database");
+                }
             } else if (parsingOutcomeFlag == PageInterpreter.PAGE_BIO_UNPARSEABLE) {
-                loggerObj.log(Level.WARNING, "profile for " + nextHandleObj.toHandle()
-                                            + " has unparseable page bio, storing null bio to database");
+                if (!saveProfiles) {
+                    loggerObj.log(Level.WARNING, "profile for " + nextHandleObj.toHandle()
+                                                + " has unparseable page bio");
+                } else {
+                    loggerObj.log(Level.WARNING, "profile for " + nextHandleObj.toHandle()
+                                                + " has unparseable page bio; storing null bio to database");
+                }
             } else {
                 throw new ProcessingException("handling unparseable profile for " + nextHandleObj.toHandle()
                                               + " yielded unrecognizable parsing error flag " + parsingOutcomeFlag);
@@ -478,12 +545,14 @@ class ScraperLoop {
             return false;
         }
 
-        try {
-            dataStoreObj.storeProfile(profileObj);
-            loggerObj.log(Level.INFO, "stored profile " + nextHandleObj.toHandle() + " null bio in database");
-        } catch (SQLException exceptionObj) {
-            loggerObj.log(Level.WARNING, "storing profile " + nextHandleObj.toHandle() + " null bio to database"
-                                        + " failed with SQL error: " + exceptionObj.getMessage());
+        if (saveProfiles) {
+            try {
+                dataStoreObj.storeProfile(profileObj);
+                loggerObj.log(Level.INFO, "stored profile " + nextHandleObj.toHandle() + " null bio in database");
+            } catch (SQLException exceptionObj) {
+                loggerObj.log(Level.WARNING, "storing profile " + nextHandleObj.toHandle() + " null bio to database"
+                                            + " failed with SQL error: " + exceptionObj.getMessage());
+            }
         }
 
         instanceObj = getOrPutInstanceWithMap(nextHandleObj.getInstance());
@@ -503,7 +572,8 @@ class ScraperLoop {
         return true;
     }
 
-    private final boolean handleForwardingPageProfile(final PageInterpreter pageInterpreterObj, final Response responseObj, final Handle nextHandleObj) {
+    private final boolean handleForwardingPageProfile(final PageInterpreter pageInterpreterObj, final Response responseObj,
+                                                      final Handle nextHandleObj, final boolean saveProfiles) {
         Handle forwardingHandle;
         Profile profileObj;
 
@@ -515,32 +585,39 @@ class ScraperLoop {
             return false;
         }
 
-        try {
-            dataStoreObj.storeProfile(profileObj);
-            loggerObj.log(Level.INFO, "stored profile " + nextHandleObj.toHandle() + " null bio in database");
-        } catch (SQLException exceptionObj) {
-            loggerObj.log(Level.WARNING, "storing profile " + nextHandleObj.toHandle() + " null bio to database"
-                                        + " failed with SQL error: " + exceptionObj.getMessage());
+        if (!saveProfiles) {
+            loggerObj.log(Level.INFO, "page at URL " + responseObj.getRequestURL().toString()
+                                      + " is a forwarding page");
+        } else {
+            loggerObj.log(Level.INFO, "page at URL " + responseObj.getRequestURL().toString()
+                                      + " is a forwarding page; storing null bio to database");
+
+            try {
+                dataStoreObj.storeProfile(profileObj);
+                loggerObj.log(Level.INFO, "stored profile " + nextHandleObj.toHandle() + " null bio in database");
+            } catch (SQLException exceptionObj) {
+                loggerObj.log(Level.WARNING, "storing profile " + nextHandleObj.toHandle() + " null bio to database"
+                                            + " failed with SQL error: " + exceptionObj.getMessage());
+            }
         }
 
-        loggerObj.log(Level.INFO, "page at URL " + responseObj.getRequestURL().toString()
-                                  + " is a forwarding page");
         forwardingHandle = pageInterpreterObj.getForwardingAddressHandle();
 
         try {
             dataStoreObj.storeHandle(forwardingHandle);
-            loggerObj.log(Level.INFO, "stored handle " + forwardingHandle.toHandle() + " to database");
+            loggerObj.log(Level.INFO, "stored forwarding handle " + forwardingHandle.toHandle() + " to database");
         } catch (SQLException exceptionObj) {
-            loggerObj.log(Level.WARNING, "storinghandle " + forwardingHandle.toHandle() + " to database failed with SQL error: "
+            loggerObj.log(Level.WARNING, "storing handle " + forwardingHandle.toHandle() + " to database failed with SQL error: "
                           + exceptionObj.getMessage());
         }
+
         unfetchedHandlesQueue.add(forwardingHandle);
-        loggerObj.log(Level.INFO, "stored new handle " + forwardingHandle.toHandle() + " in database");
 
         return true;
     }
 
-    private final boolean handleProfileWithNoOrOldPosts(final Response responseObj, final Handle nextHandleObj, final int parsingOutcomeFlag) {
+    private final boolean handleProfileWithNoOrOldPosts(final Response responseObj, final Handle nextHandleObj, final int parsingOutcomeFlag,
+                                                        final boolean saveProfiles) {
         Profile profileObj;
 
         try {
@@ -552,19 +629,32 @@ class ScraperLoop {
         }
 
         if (parsingOutcomeFlag == PageInterpreter.PAGE_HAS_NO_POSTS) {
-            loggerObj.log(Level.INFO, "page at URL " + responseObj.getRequestURL().toString()
-                                      + " has no public posts");
+            if (!saveProfiles) {
+                loggerObj.log(Level.INFO, "page at URL " + responseObj.getRequestURL().toString()
+                                          + " has no public posts");
+            } else {
+                loggerObj.log(Level.INFO, "page at URL " + responseObj.getRequestURL().toString()
+                                          + " has no public posts; storing null bio to database");
+            }
         } else {
-            loggerObj.log(Level.INFO, "page at URL " + responseObj.getRequestURL().toString()
-                                      + " has no posts more recent than " + PROFILE_TOOT_AGE_CUTOFF_DAYS + " days old");
+            if (!saveProfiles) {
+                loggerObj.log(Level.INFO, "page at URL " + responseObj.getRequestURL().toString()
+                                          + " has no posts more recent than " + PROFILE_TOOT_AGE_CUTOFF_DAYS + " days old");
+            } else {
+                loggerObj.log(Level.INFO, "page at URL " + responseObj.getRequestURL().toString()
+                                          + " has no posts more recent than " + PROFILE_TOOT_AGE_CUTOFF_DAYS + " days old; "
+                                          + "storing null bio to database");
+            }
         }
 
-        try {
-            dataStoreObj.storeProfile(profileObj);
-            loggerObj.log(Level.INFO, "stored profile " + nextHandleObj.toHandle() + " null bio in database");
-        } catch (SQLException exceptionObj) {
-            loggerObj.log(Level.WARNING, "storing profile " + nextHandleObj.toHandle() + " null bio to database"
-                                        + " failed with SQL error: " + exceptionObj.getMessage());
+        if (saveProfiles) {
+            try {
+                dataStoreObj.storeProfile(profileObj);
+                loggerObj.log(Level.INFO, "stored profile " + nextHandleObj.toHandle() + " null bio in database");
+            } catch (SQLException exceptionObj) {
+                loggerObj.log(Level.WARNING, "storing profile " + nextHandleObj.toHandle() + " null bio to database"
+                                            + " failed with SQL error: " + exceptionObj.getMessage());
+            }
         }
 
         return true;
